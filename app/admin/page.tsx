@@ -223,40 +223,37 @@ function AddUserModal({ onClose, onAdded }: { onClose: () => void; onAdded: () =
   const [form, setForm] = useState({ name: '', email: '', password: '', role: 'coordinator' })
 
   async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setLoading(true)
+  e.preventDefault()
+  setLoading(true)
 
-    try {
-      // Create auth user using service role
-      const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+  try {
+    // Call API route to create user
+    const response = await fetch('/api/create-user', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
         email: form.email,
         password: form.password,
-        email_confirm: true,
+        name: form.name,
+        role: form.role
       })
+    })
 
-      if (authError) throw authError
+    const result = await response.json()
 
-      // Create user role
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .insert({
-          id: authData.user.id,
-          name: form.name,
-          email: form.email,
-          role: form.role,
-        })
-
-      if (roleError) throw roleError
-
-      alert('User created successfully!')
-      onAdded()
-      onClose()
-    } catch (err: any) {
-      alert('Failed to create user: ' + err.message)
-    } finally {
-      setLoading(false)
+    if (result.error) {
+      throw new Error(result.error)
     }
+
+    alert('User created successfully!')
+    onAdded()
+    onClose()
+  } catch (err: any) {
+    alert('Failed to create user: ' + err.message)
+  } finally {
+    setLoading(false)
   }
+}
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
