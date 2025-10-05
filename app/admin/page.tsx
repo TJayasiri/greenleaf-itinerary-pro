@@ -156,9 +156,8 @@ export default function AdminPage() {
                     <td className="px-4 py-3">{user.name}</td>
                     <td className="px-4 py-3">{user.email}</td>
                     <td className="px-4 py-3">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        user.role === 'admin' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'
-                      }`}>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${user.role === 'admin' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'
+                        }`}>
                         {user.role}
                       </span>
                     </td>
@@ -187,17 +186,21 @@ export default function AdminPage() {
                 </tr>
               </thead>
               <tbody className="divide-y">
+
                 {itineraries.slice(0, 10).map((itin) => (
-                  <tr key={itin.id} className="hover:bg-slate-50">
+                  <tr
+                    key={itin.id}
+                    onClick={() => router.push(`/dashboard/edit/${itin.id}`)}
+                    className="hover:bg-slate-50 cursor-pointer"
+                  >
                     <td className="px-4 py-3 font-mono text-sm">{itin.code}</td>
                     <td className="px-4 py-3">{itin.doc_title || 'Untitled'}</td>
                     <td className="px-4 py-3 text-sm">{itin.participants?.split(';')[0] || '-'}</td>
                     <td className="px-4 py-3">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        itin.status === 'draft' ? 'bg-slate-100 text-slate-700' :
-                        itin.status === 'sent' ? 'bg-blue-100 text-blue-700' :
-                        'bg-green-100 text-green-700'
-                      }`}>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${itin.status === 'draft' ? 'bg-slate-100 text-slate-700' :
+                          itin.status === 'sent' ? 'bg-blue-100 text-blue-700' :
+                            'bg-green-100 text-green-700'
+                        }`}>
                         {itin.status}
                       </span>
                     </td>
@@ -206,6 +209,7 @@ export default function AdminPage() {
                     </td>
                   </tr>
                 ))}
+
               </tbody>
             </table>
           </div>
@@ -223,37 +227,37 @@ function AddUserModal({ onClose, onAdded }: { onClose: () => void; onAdded: () =
   const [form, setForm] = useState({ name: '', email: '', password: '', role: 'coordinator' })
 
   async function handleSubmit(e: React.FormEvent) {
-  e.preventDefault()
-  setLoading(true)
+    e.preventDefault()
+    setLoading(true)
 
-  try {
-    // Call API route to create user
-    const response = await fetch('/api/create-user', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email: form.email,
-        password: form.password,
-        name: form.name,
-        role: form.role
+    try {
+      // Call API route to create user
+      const response = await fetch('/api/create-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: form.email,
+          password: form.password,
+          name: form.name,
+          role: form.role
+        })
       })
-    })
 
-    const result = await response.json()
+      const result = await response.json()
 
-    if (result.error) {
-      throw new Error(result.error)
+      if (result.error) {
+        throw new Error(result.error)
+      }
+
+      alert('User created successfully!')
+      onAdded()
+      onClose()
+    } catch (err: any) {
+      alert('Failed to create user: ' + err.message)
+    } finally {
+      setLoading(false)
     }
-
-    alert('User created successfully!')
-    onAdded()
-    onClose()
-  } catch (err: any) {
-    alert('Failed to create user: ' + err.message)
-  } finally {
-    setLoading(false)
   }
-}
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
