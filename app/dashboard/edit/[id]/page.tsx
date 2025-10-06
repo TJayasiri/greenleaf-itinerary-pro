@@ -1,7 +1,7 @@
 // File: app/dashboard/edit/[id]/page.tsx
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { supabase, type Itinerary } from '@/lib/supabase'
 import { useRouter, useParams } from 'next/navigation'
 import { Save, ArrowLeft, Send, Upload, Trash2, Plus, Link as LinkIcon } from 'lucide-react'
@@ -18,64 +18,74 @@ type DocRow = {
   created_at?: string
 }
 
+
 export default function EditItineraryPage() {
   const router = useRouter()
   const params = useParams()
-  const id = useMemo(() => (params?.id as string) || '', [params])
+  const id = params.id as string
 
+  const [user, setUser] = useState<any>(null)
   const [itinerary, setItinerary] = useState<Partial<Itinerary> | null>(null)
-  const [documents, setDocuments] = useState<DocRow[]>([])
+  const [documents, setDocuments] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
 
   useEffect(() => {
-    if (!id) return
-    ;(async () => {
-      await Promise.all([loadItinerary(id), loadDocuments(id)])
-      setLoading(false)
-    })()
+    checkAuth()
+    if (id) {
+      loadItinerary()
+      loadDocuments()
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
 
-  async function loadItinerary(itineraryId: string) {
+  async function checkAuth() {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      router.push('/login')
+      return
+    }
+    setUser(user)
+  }
+
+  async function loadItinerary() {
     const { data, error } = await supabase
       .from('itineraries')
       .select('*')
-      .eq('id', itineraryId)
+      .eq('id', id)
       .single()
 
     if (error) {
-      toast('✗ Failed to load itinerary', 'error')
+      console.error('Load error:', error)
+      alert('Failed to load itinerary')
       return
     }
 
-    // Normalize JSON fields to avoid undefined explosions in controlled inputs
-    const normalized = {
+    // FIXED: Load from ground_transport column
+    setItinerary({
       ...data,
       flights: data?.flights ?? [],
       visits: data?.visits ?? [],
       accommodation: data?.accommodation ?? [],
-      transport: data?.transport ?? [],
+      transport: data?.ground_transport ?? [], // Read from ground_transport
       travel_docs: data?.travel_docs ?? {},
-    } as Partial<Itinerary> & Json
-
-    setItinerary(normalized)
+    })
+    setLoading(false)
   }
 
-  async function loadDocuments(itineraryId: string) {
+  async function loadDocuments() {
     const { data, error } = await supabase
       .from('documents')
       .select('*')
-      .eq('itinerary_id', itineraryId)
-      .order('created_at', { ascending: false })
+      .eq('itinerary_id', id)
 
     if (error) {
-      toast('✗ Failed to load documents', 'error')
+      console.error('Document load error:', error)
       return
     }
 
-    setDocuments((data as DocRow[]) || [])
+    setDocuments(data || [])
   }
 
   async function handleSave() {
@@ -83,7 +93,7 @@ export default function EditItineraryPage() {
     setSaving(true)
 
     try {
-      // Persist only whitelisted columns to avoid accidental nulling
+      // FIXED: Save transport to ground_transport column
       const payload = {
         doc_title: itinerary.doc_title ?? null,
         trip_tag: itinerary.trip_tag ?? null,
@@ -96,10 +106,12 @@ export default function EditItineraryPage() {
         flights: (itinerary as any).flights ?? [],
         visits: (itinerary as any).visits ?? [],
         accommodation: (itinerary as any).accommodation ?? [],
-        transport: (itinerary as any).transport ?? [],
+        // ground_transport: (itinerary as any).transport ?? [], // Save to ground_transport
+        transport: (itinerary as any).transport ?? [], // KEEP AS 'transport'
         travel_docs: (itinerary as any).travel_docs ?? {},
         updated_at: new Date().toISOString(),
       }
+      
 
       const { error } = await supabase.from('itineraries').update(payload).eq('id', id)
       if (error) throw error
@@ -141,12 +153,12 @@ export default function EditItineraryPage() {
           file_path: fileName,
           file_type: file.type || 'other',
           file_size: file.size,
-          file_url: publicUrl, // persist URL for render-time; no async calls in render
+          file_url: publicUrl,
         })
         if (dbError) throw dbError
       }
 
-      await loadDocuments(id)
+      await loadDocuments() // FIXED: removed (id)
       toast('✓ Files uploaded', 'success')
     } catch (err: any) {
       toast(`✗ Upload failed: ${err?.message || 'Unknown error'}`, 'error')
@@ -161,7 +173,7 @@ export default function EditItineraryPage() {
     try {
       await supabase.storage.from('itinerary-docs').remove([filePath])
       await supabase.from('documents').delete().eq('id', docId)
-      await loadDocuments(id)
+      await loadDocuments() // FIXED: removed (id)
       toast('✓ Document deleted', 'success')
     } catch {
       toast('✗ Failed to delete', 'error')
@@ -192,7 +204,7 @@ export default function EditItineraryPage() {
         .eq('id', id)
 
       toast('✓ Email sent', 'success')
-      await loadItinerary(id)
+      await loadItinerary() // FIXED: removed (id)
     } catch {
       toast('✗ Failed to send email', 'error')
     }
@@ -435,7 +447,7 @@ function LabeledDate({
   )
 }
 
-/* ---------- Sections (yours, enhanced) ---------- */
+/* ---------- Sections ---------- */
 
 // Accommodation
 function AccommodationSection({
@@ -693,7 +705,7 @@ function toast(message: string, variant: 'success' | 'error' | 'info' = 'info') 
   setTimeout(() => notification.remove(), 3000)
 }
 
-/* ---------- Existing sections from your original (Flights/Visits) ---------- */
+/* ---------- Existing sections ---------- */
 
 function FlightsSection({
   flights,

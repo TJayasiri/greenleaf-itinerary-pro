@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { supabase, generateItineraryCode, type Itinerary } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
-import { Plus, FileText, LogOut, Upload, X } from 'lucide-react'
+import { Plus, FileText, LogOut, X } from 'lucide-react'
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -13,21 +13,19 @@ export default function DashboardPage() {
   const [showCreate, setShowCreate] = useState(false)
 
   useEffect(() => {
-    // --- Authentication temporarily disabled ---
-    // checkAuth()
+    checkAuth()
     loadItineraries()
-    setLoading(false)
   }, [])
 
-  // async function checkAuth() {
-  //   const { data: { user } } = await supabase.auth.getUser()
-  //   if (!user) {
-  //     router.push('/login')
-  //     return
-  //   }
-  //   setUser(user)
-  //   setLoading(false)
-  // }
+  async function checkAuth() {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      router.push('/login')
+      return
+    }
+    setUser(user)
+    setLoading(false)
+  }
 
   async function loadItineraries() {
     const { data } = await supabase
@@ -38,10 +36,10 @@ export default function DashboardPage() {
     setItineraries(data || [])
   }
 
-  // async function handleLogout() {
-  //   await supabase.auth.signOut()
-  //   router.push('/login')
-  // }
+  async function handleLogout() {
+    await supabase.auth.signOut()
+    router.push('/login')
+  }
 
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>
@@ -49,26 +47,23 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Header */}
       <header className="bg-white border-b shadow-sm sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
           <div>
             <h1 className="text-xl font-bold text-slate-900">Coordinator Dashboard</h1>
-            {/* <p className="text-sm text-slate-600">{user?.email}</p> */}
+            <p className="text-sm text-slate-600">{user?.email}</p>
           </div>
-          {/* <button
+          <button
             onClick={handleLogout}
             className="flex items-center gap-2 px-4 py-2 text-slate-600 hover:text-slate-900 transition"
           >
             <LogOut className="w-4 h-4" />
             Logout
-          </button> */}
+          </button>
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-8">
-        {/* Actions */}
         <div className="mb-6 flex justify-between items-center">
           <h2 className="text-2xl font-bold text-slate-900">My Itineraries</h2>
           <button
@@ -80,7 +75,6 @@ export default function DashboardPage() {
           </button>
         </div>
 
-        {/* Itineraries List */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           {itineraries.map((item) => (
             <div
@@ -117,12 +111,13 @@ export default function DashboardPage() {
         )}
       </main>
 
-      {/* Create Modal */}
       {showCreate && (
         <CreateItineraryModal
+          user={user}
           onClose={() => setShowCreate(false)}
           onCreated={(id) => {
             setShowCreate(false)
+            loadItineraries()
             router.push(`/dashboard/edit/${id}`)
           }}
         />
@@ -145,7 +140,7 @@ function StatusBadge({ status }: { status: string }) {
   )
 }
 
-function CreateItineraryModal({ onClose, onCreated }: { onClose: () => void; onCreated: (id: string) => void }) {
+function CreateItineraryModal({ user, onClose, onCreated }: { user: any; onClose: () => void; onCreated: (id: string) => void }) {
   const [loading, setLoading] = useState(false)
   const [form, setForm] = useState({
     doc_title: '',
@@ -161,23 +156,19 @@ function CreateItineraryModal({ onClose, onCreated }: { onClose: () => void; onC
     setLoading(true)
 
     try {
-      
-      // TEMPORARY: Use fake user ID for testing
-    const fakeUserId = '2c0ca371-dbf7-4124-9bd3-f24a7c4e7c1d'
-    
-    // const { data: { user } } = await supabase.auth.getUser()
-    // if (!user) return
-
       const code = generateItineraryCode()
 
       const { data, error } = await supabase
         .from('itineraries')
         .insert({
           code,
-          // created_by: user.id,
+          created_by: user.id, // FIXED: Use actual logged-in user
           ...form,
           flights: [],
           visits: [],
+          accommodation: [],
+          ground_transport: [],
+          travel_docs: {},
           notes: {},
           signatures: {},
           watermark: {},
@@ -189,9 +180,9 @@ function CreateItineraryModal({ onClose, onCreated }: { onClose: () => void; onC
       if (error) throw error
 
       onCreated(data.id)
-    } catch (err) {
-      console.error(err)
-      alert('Failed to create itinerary')
+    } catch (err: any) {
+      console.error('Create error:', err)
+      alert('Failed to create itinerary: ' + err.message)
     } finally {
       setLoading(false)
     }
@@ -208,7 +199,6 @@ function CreateItineraryModal({ onClose, onCreated }: { onClose: () => void; onC
         </div>
 
         <form onSubmit={handleCreate} className="p-6 space-y-4">
-          {/* Form fields */}
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">Document Title</label>
             <input
