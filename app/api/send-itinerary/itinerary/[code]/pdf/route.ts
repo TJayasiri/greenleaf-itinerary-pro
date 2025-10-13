@@ -5,31 +5,35 @@ import puppeteer from 'puppeteer-core'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
-// Optional: lock region close to your users
-// export const preferredRegion = ['sin1', 'hkg1', 'bom1']
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
 export async function GET(_req: Request, { params }: { params: { code: string } }) {
   const code = params.code.toUpperCase()
 
-  // Build the absolute URL to your print page
   const base = process.env.NEXT_PUBLIC_BASE_URL || process.env.VERCEL_URL || 'http://localhost:3000'
   const origin = String(base).startsWith('http') ? base : `https://${base}`
   const url = `${origin}/itinerary/${encodeURIComponent(code)}/print`
 
-  // Executable path (Sparticuz returns a path on serverless; may be null locally)
-  const execPath = (await chromium.executablePath()) || process.env.CHROME_EXECUTABLE_PATH || undefined
+  const execPath =
+    (await chromium.executablePath()) || process.env.CHROME_EXECUTABLE_PATH || undefined
 
   const browser = await puppeteer.launch({
     args: chromium.args,
-    executablePath: execPath,     // if undefined locally, Puppeteer will try system Chrome
-    headless: true,               // ✅ don’t read from chromium.* to avoid TS issues
+    executablePath: execPath,
+    headless: true,
   })
 
   try {
     const page = await browser.newPage()
     await page.goto(url, { waitUntil: 'networkidle0', timeout: 60_000 })
-    // small buffer if your print page hydrates client data
-    await page.waitForTimeout(400)
+
+    // Option A: tiny buffer to allow client hydration to finish
+    await sleep(400)
+
+    // Option B (even safer): wait for a known element before PDF.
+    // Uncomment if you want deterministic readiness:
+    // await page.waitForSelector('h1, h2, .print-ready', { timeout: 5000 })
 
     const pdf = await page.pdf({
       format: 'A4',
