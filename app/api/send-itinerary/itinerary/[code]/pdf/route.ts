@@ -36,7 +36,7 @@ export async function GET(_req: Request, { params }: { params: { code: string } 
       preferCSSPageSize: true,
     })
 
-    // ✅ Use ArrayBuffer slice for BodyInit
+    // Convert Uint8Array -> ArrayBuffer (BodyInit)
     const body: ArrayBuffer = pdfUint8.buffer.slice(
       pdfUint8.byteOffset,
       pdfUint8.byteOffset + pdfUint8.byteLength
