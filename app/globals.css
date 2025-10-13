@@ -21,7 +21,7 @@ body {
 }
 
 /* Print styles */
-@media print {
+/*@media print {
   .no-print {
     display: none !important;
   }
@@ -29,7 +29,15 @@ body {
   body {
     background: white !important;
   }
+} */
+
+/* file: app/globals.css */
+@media print {
+  html, body { width: 210mm; margin: 0 auto !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .print\:hide { display: none !important; }
+  .page { page-break-after: always; break-after: page; }
 }
+@page { size: A4 portrait; margin: 12mm; }
 
 /* Animations */
 @keyframes fadeIn {
@@ -96,4 +104,6 @@ body {
     font-size: 0.8em;
     color: #666;
   }
+
+  
 }
