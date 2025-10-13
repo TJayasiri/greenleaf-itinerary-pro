@@ -68,7 +68,8 @@ export default function EditItineraryPage() {
       flights: data?.flights ?? [],
       visits: data?.visits ?? [],
       accommodation: data?.accommodation ?? [],
-      transport: data?.ground_transport ?? [], // Read from ground_transport
+      //transport: data?.ground_transport ?? [], // Read from ground_transport
+      transport: data?.transport ?? [], // correct version added 10/13
       travel_docs: data?.travel_docs ?? {},
     })
     setLoading(false)
