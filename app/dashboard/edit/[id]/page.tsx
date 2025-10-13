@@ -585,8 +585,360 @@ function toast(message: string, variant: 'success' | 'error' | 'info' = 'info') 
 }
 
 // Placeholder for section components - add FlightsSection, VisitsSection, etc.
-function FlightsSection({ flights, onChange }: any) { return null }
-function VisitsSection({ visits, onChange }: any) { return null }
-function AccommodationSection({ accommodation, onChange }: any) { return null }
-function GroundTransportSection({ transport, onChange }: any) { return null }
-function TravelDocsSection({ docs, onChange }: any) { return null }
+// Replace the placeholder functions with these complete implementations:
+
+function VisitsSection({ visits, onChange }: any) {
+  function addVisit() {
+    onChange([...visits, { date: '', activity: '', facility: '', address: '', transport: '' }])
+  }
+  function updateVisit(index: number, field: string, value: string) {
+    const updated = [...visits]
+    updated[index][field] = value
+    onChange(updated)
+  }
+  function removeVisit(index: number) {
+    onChange(visits.filter((_: any, i: number) => i !== index))
+  }
+
+  return (
+    <section className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+      <div className="bg-gradient-to-r from-emerald-50 to-green-50 px-8 py-6 border-b border-emerald-100">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl flex items-center justify-center">
+              <MapPin className="w-5 h-5 text-white" />
+            </div>
+            <h2 className="text-xl font-bold text-slate-900">Site Visits</h2>
+          </div>
+          <button
+            onClick={addVisit}
+            className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-xl hover:shadow-lg hover:scale-105 transition-all font-medium"
+          >
+            <Plus className="w-4 h-4" />
+            Add Visit
+          </button>
+        </div>
+      </div>
+
+      <div className="p-8 space-y-4">
+        {visits.length === 0 ? (
+          <div className="text-center py-8 text-slate-500">No visits added yet</div>
+        ) : (
+          visits.map((visit: any, i: number) => (
+            <div key={i} className="p-6 bg-gradient-to-br from-slate-50 to-white border-2 border-slate-200 rounded-xl hover:shadow-md transition group">
+              <div className="grid grid-cols-3 gap-4 mb-4">
+                <input
+                  type="date"
+                  value={visit.date}
+                  onChange={(e) => updateVisit(i, 'date', e.target.value)}
+                  className="px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-sm focus:border-emerald-500 focus:outline-none"
+                />
+                <input
+                  type="text"
+                  placeholder="Activity"
+                  value={visit.activity}
+                  onChange={(e) => updateVisit(i, 'activity', e.target.value)}
+                  className="px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-sm focus:border-emerald-500 focus:outline-none"
+                />
+                <input
+                  type="text"
+                  placeholder="Facility"
+                  value={visit.facility}
+                  onChange={(e) => updateVisit(i, 'facility', e.target.value)}
+                  className="px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-sm focus:border-emerald-500 focus:outline-none"
+                />
+              </div>
+              <div className="grid grid-cols-5 gap-4 items-start">
+                <textarea
+                  placeholder="Address"
+                  value={visit.address}
+                  onChange={(e) => updateVisit(i, 'address', e.target.value)}
+                  className="col-span-3 px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-sm focus:border-emerald-500 focus:outline-none"
+                  rows={2}
+                />
+                <input
+                  type="text"
+                  placeholder="Transport"
+                  value={visit.transport}
+                  onChange={(e) => updateVisit(i, 'transport', e.target.value)}
+                  className="px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-sm focus:border-emerald-500 focus:outline-none"
+                />
+                <button
+                  onClick={() => removeVisit(i)}
+                  className="text-slate-400 hover:text-red-600 hover:scale-110 transition self-start mt-2 opacity-0 group-hover:opacity-100"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </section>
+  )
+}
+
+function AccommodationSection({ accommodation, onChange }: any) {
+  function addAccommodation() {
+    onChange([...accommodation, { hotel_name: '', checkin: '', checkout: '', confirmation: '', address: '', phone: '' }])
+  }
+  function updateAccommodation(index: number, field: string, value: string) {
+    const updated = [...accommodation]
+    updated[index][field] = value
+    onChange(updated)
+  }
+  function removeAccommodation(index: number) {
+    onChange(accommodation.filter((_: any, i: number) => i !== index))
+  }
+
+  return (
+    <section className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+      <div className="bg-gradient-to-r from-amber-50 to-orange-50 px-8 py-6 border-b border-amber-100">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center">
+              <Building2 className="w-5 h-5 text-white" />
+            </div>
+            <h2 className="text-xl font-bold text-slate-900">Accommodation</h2>
+          </div>
+          <button
+            onClick={addAccommodation}
+            className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl hover:shadow-lg hover:scale-105 transition-all font-medium"
+          >
+            <Plus className="w-4 h-4" />
+            Add Hotel
+          </button>
+        </div>
+      </div>
+
+      <div className="p-8 space-y-4">
+        {accommodation.length === 0 ? (
+          <div className="text-center py-8 text-slate-500">No accommodation added yet</div>
+        ) : (
+          accommodation.map((hotel: any, i: number) => (
+            <div key={i} className="p-6 bg-gradient-to-br from-slate-50 to-white border-2 border-slate-200 rounded-xl hover:shadow-md transition group">
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <input
+                  type="text"
+                  placeholder="Hotel Name"
+                  value={hotel.hotel_name}
+                  onChange={(e) => updateAccommodation(i, 'hotel_name', e.target.value)}
+                  className="px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-sm focus:border-amber-500 focus:outline-none"
+                />
+                <input
+                  type="text"
+                  placeholder="Confirmation Number"
+                  value={hotel.confirmation}
+                  onChange={(e) => updateAccommodation(i, 'confirmation', e.target.value)}
+                  className="px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-sm focus:border-amber-500 focus:outline-none"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-2">Check-in</label>
+                  <input
+                    type="date"
+                    value={hotel.checkin}
+                    onChange={(e) => updateAccommodation(i, 'checkin', e.target.value)}
+                    className="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-sm focus:border-amber-500 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-2">Check-out</label>
+                  <input
+                    type="date"
+                    value={hotel.checkout}
+                    onChange={(e) => updateAccommodation(i, 'checkout', e.target.value)}
+                    className="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-sm focus:border-amber-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-4">
+                <input
+                  type="text"
+                  placeholder="Address"
+                  value={hotel.address}
+                  onChange={(e) => updateAccommodation(i, 'address', e.target.value)}
+                  className="col-span-2 px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-sm focus:border-amber-500 focus:outline-none"
+                />
+                <input
+                  type="tel"
+                  placeholder="Phone"
+                  value={hotel.phone}
+                  onChange={(e) => updateAccommodation(i, 'phone', e.target.value)}
+                  className="px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-sm focus:border-amber-500 focus:outline-none"
+                />
+              </div>
+              <button 
+                onClick={() => removeAccommodation(i)} 
+                className="mt-4 text-slate-400 hover:text-red-600 hover:scale-110 transition opacity-0 group-hover:opacity-100 flex items-center gap-2"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span className="text-sm font-medium">Remove</span>
+              </button>
+            </div>
+          ))
+        )}
+      </div>
+    </section>
+  )
+}
+
+function GroundTransportSection({ transport, onChange }: any) {
+  function addTransport() {
+    onChange([...transport, { type: '', company: '', confirmation: '', pickup_time: '', pickup_location: '', notes: '' }])
+  }
+  function updateTransport(index: number, field: string, value: string) {
+    const updated = [...transport]
+    updated[index][field] = value
+    onChange(updated)
+  }
+  function removeTransport(index: number) {
+    onChange(transport.filter((_: any, i: number) => i !== index))
+  }
+
+  return (
+    <section className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+      <div className="bg-gradient-to-r from-violet-50 to-purple-50 px-8 py-6 border-b border-violet-100">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl flex items-center justify-center">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+              </svg>
+            </div>
+            <h2 className="text-xl font-bold text-slate-900">Ground Transportation</h2>
+          </div>
+          <button
+            onClick={addTransport}
+            className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-xl hover:shadow-lg hover:scale-105 transition-all font-medium"
+          >
+            <Plus className="w-4 h-4" />
+            Add Transport
+          </button>
+        </div>
+      </div>
+
+      <div className="p-8 space-y-4">
+        {transport.length === 0 ? (
+          <div className="text-center py-8 text-slate-500">No transport added yet</div>
+        ) : (
+          transport.map((item: any, i: number) => (
+            <div key={i} className="p-6 bg-gradient-to-br from-slate-50 to-white border-2 border-slate-200 rounded-xl hover:shadow-md transition group">
+              <div className="grid grid-cols-3 gap-4 mb-4">
+                <select
+                  value={item.type}
+                  onChange={(e) => updateTransport(i, 'type', e.target.value)}
+                  className="px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-sm focus:border-violet-500 focus:outline-none"
+                >
+                  <option value="">Select Type</option>
+                  <option value="Taxi">Taxi</option>
+                  <option value="Rental Car">Rental Car</option>
+                  <option value="Train">Train</option>
+                  <option value="Bus">Bus</option>
+                  <option value="Private Transfer">Private Transfer</option>
+                </select>
+                <input
+                  type="text"
+                  placeholder="Company Name"
+                  value={item.company}
+                  onChange={(e) => updateTransport(i, 'company', e.target.value)}
+                  className="px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-sm focus:border-violet-500 focus:outline-none"
+                />
+                <input
+                  type="text"
+                  placeholder="Confirmation #"
+                  value={item.confirmation}
+                  onChange={(e) => updateTransport(i, 'confirmation', e.target.value)}
+                  className="px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-sm focus:border-violet-500 focus:outline-none"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <input
+                  type="time"
+                  value={item.pickup_time}
+                  onChange={(e) => updateTransport(i, 'pickup_time', e.target.value)}
+                  className="px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-sm focus:border-violet-500 focus:outline-none"
+                />
+                <input
+                  type="text"
+                  placeholder="Pickup Location"
+                  value={item.pickup_location}
+                  onChange={(e) => updateTransport(i, 'pickup_location', e.target.value)}
+                  className="px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-sm focus:border-violet-500 focus:outline-none"
+                />
+              </div>
+              <textarea
+                placeholder="Additional Notes"
+                value={item.notes}
+                onChange={(e) => updateTransport(i, 'notes', e.target.value)}
+                className="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-sm focus:border-violet-500 focus:outline-none"
+                rows={2}
+              />
+              <button 
+                onClick={() => removeTransport(i)} 
+                className="mt-4 text-slate-400 hover:text-red-600 hover:scale-110 transition opacity-0 group-hover:opacity-100 flex items-center gap-2"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span className="text-sm font-medium">Remove</span>
+              </button>
+            </div>
+          ))
+        )}
+      </div>
+    </section>
+  )
+}
+
+function TravelDocsSection({ docs, onChange }: any) {
+  function updateField(field: string, value: string) {
+    onChange({ ...docs, [field]: value })
+  }
+
+  return (
+    <section className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+      <div className="bg-gradient-to-r from-cyan-50 to-teal-50 px-8 py-6 border-b border-cyan-100">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-teal-600 rounded-xl flex items-center justify-center">
+            <FileText className="w-5 h-5 text-white" />
+          </div>
+          <h2 className="text-xl font-bold text-slate-900">Travel Documents</h2>
+        </div>
+      </div>
+      
+      <div className="p-8">
+        <div className="grid md:grid-cols-2 gap-6">
+          <PremiumInput
+            label="Visa Number"
+            value={docs?.visa_number || ''}
+            onChange={(v: string) => updateField('visa_number', v)}
+            placeholder="e.g., TH-2025-847392"
+          />
+          <PremiumDate
+            label="Visa Expiry"
+            value={docs?.visa_expiry || ''}
+            onChange={(v: string) => updateField('visa_expiry', v)}
+          />
+          <PremiumInput
+            label="Insurance Policy Number"
+            value={docs?.insurance_policy || ''}
+            onChange={(v: string) => updateField('insurance_policy', v)}
+            placeholder="e.g., TRAV-2025-991827"
+          />
+          <PremiumInput
+            label="Insurance Provider"
+            value={docs?.insurance_provider || ''}
+            onChange={(v: string) => updateField('insurance_provider', v)}
+            placeholder="e.g., AIG Travel Guard"
+          />
+          <PremiumInput
+            label="Emergency Contact"
+            value={docs?.emergency_contact || ''}
+            onChange={(v: string) => updateField('emergency_contact', v)}
+            placeholder="e.g., +1-800-555-9999"
+          />
+        </div>
+      </div>
+    </section>
+  )
+}
