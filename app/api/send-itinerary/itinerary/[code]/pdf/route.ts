@@ -27,7 +27,7 @@ export async function GET(_req: Request, { params }: { params: { code: string } 
   try {
     const page = await browser.newPage()
     await page.goto(url, { waitUntil: 'networkidle0', timeout: 60_000 })
-    await sleep(400)
+    await sleep(400) // small buffer for client hydration (Supabase, etc.)
 
     const pdfUint8 = await page.pdf({
       format: 'A4',
@@ -36,11 +36,9 @@ export async function GET(_req: Request, { params }: { params: { code: string } 
       preferCSSPageSize: true,
     })
 
-    // Convert Uint8Array -> ArrayBuffer (BodyInit)
-    const body: ArrayBuffer = pdfUint8.buffer.slice(
-      pdfUint8.byteOffset,
-      pdfUint8.byteOffset + pdfUint8.byteLength
-    )
+    // ✅ Create a fresh ArrayBuffer (not SharedArrayBuffer) and copy bytes
+    const body = new ArrayBuffer(pdfUint8.byteLength)
+    new Uint8Array(body).set(pdfUint8)
 
     return new NextResponse(body, {
       status: 200,
