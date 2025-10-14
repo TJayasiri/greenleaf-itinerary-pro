@@ -178,6 +178,7 @@ function generateEmailHtml(itinerary: any, documents: any[], customMessage?: str
           </tr>
 
           <!-- Flights -->
+          // Replace the flights section (around line 185)
           ${flights.length > 0 ? `
           <tr>
             <td style="padding: 0 30px 20px 30px;">
@@ -187,11 +188,13 @@ function generateEmailHtml(itinerary: any, documents: any[], customMessage?: str
                 <tr>
                   <td style="border-bottom: 1px solid #e0e0e0;">
                     <div style="color: #333; font-size: 14px; font-weight: bold; margin-bottom: 5px;">
-                      ${f.flight} - ${f.date}
+                      ${f.airline || 'Airline'} ${f.flight} - ${f.date}
                     </div>
-                    <div style="color: #666; font-size: 13px;">
+                    <div style="color: #666; font-size: 13px; margin-bottom: 5px;">
                       ${f.from} → ${f.to} | Dep: ${f.dep} | Arr: ${f.arr}
                     </div>
+                    ${f.pnr ? `<div style="color: #666; font-size: 12px;">PNR: <span style="font-family: monospace; color: #62BBC1;">${f.pnr}</span></div>` : ''}
+                    ${f.eticket ? `<div style="color: #666; font-size: 12px;">E-ticket: <span style="font-family: monospace; color: #62BBC1;">${f.eticket}</span></div>` : ''}
                   </td>
                 </tr>
                 `).join('')}

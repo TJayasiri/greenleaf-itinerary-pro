@@ -541,13 +541,25 @@ function PremiumDate({ label, value, onChange }: PremiumDateProps) {
 
 function FlightsSection({ flights, onChange }: any) {
   function addFlight() {
-    onChange([...flights, { flight: '', date: '', from: '', to: '', dep: '', arr: '' }])
+    onChange([...flights, { 
+      flight: '', 
+      airline: '',
+      date: '', 
+      from: '', 
+      to: '', 
+      dep: '', 
+      arr: '',
+      pnr: '',
+      eticket: ''
+    }])
   }
+  
   function updateFlight(index: number, field: string, value: string) {
     const updated = [...flights]
     updated[index][field] = value
     onChange(updated)
   }
+  
   function removeFlight(index: number) {
     onChange(flights.filter((_: any, i: number) => i !== index))
   }
@@ -578,14 +590,82 @@ function FlightsSection({ flights, onChange }: any) {
         ) : (
           flights.map((flight: any, i: number) => (
             <div key={i} className="p-6 bg-gradient-to-br from-slate-50 to-white border-2 border-slate-200 rounded-xl hover:shadow-md transition group">
-              <div className="grid grid-cols-7 gap-3 mb-3">
-                <input type="text" placeholder="Flight No" value={flight.flight} onChange={(e) => updateFlight(i, 'flight', e.target.value)} className="px-3 py-2 bg-white border-2 border-slate-200 rounded-lg text-sm focus:border-sky-500 focus:outline-none" />
-                <input type="date" value={flight.date} onChange={(e) => updateFlight(i, 'date', e.target.value)} className="px-3 py-2 bg-white border-2 border-slate-200 rounded-lg text-sm focus:border-sky-500 focus:outline-none" />
-                <input type="text" placeholder="From" value={flight.from} onChange={(e) => updateFlight(i, 'from', e.target.value)} className="px-3 py-2 bg-white border-2 border-slate-200 rounded-lg text-sm focus:border-sky-500 focus:outline-none" />
-                <input type="text" placeholder="To" value={flight.to} onChange={(e) => updateFlight(i, 'to', e.target.value)} className="px-3 py-2 bg-white border-2 border-slate-200 rounded-lg text-sm focus:border-sky-500 focus:outline-none" />
-                <input type="time" value={flight.dep} onChange={(e) => updateFlight(i, 'dep', e.target.value)} className="px-3 py-2 bg-white border-2 border-slate-200 rounded-lg text-sm focus:border-sky-500 focus:outline-none" />
-                <input type="time" value={flight.arr} onChange={(e) => updateFlight(i, 'arr', e.target.value)} className="px-3 py-2 bg-white border-2 border-slate-200 rounded-lg text-sm focus:border-sky-500 focus:outline-none" />
-                <button onClick={() => removeFlight(i)} className="text-slate-400 hover:text-red-600 hover:scale-110 transition opacity-0 group-hover:opacity-100"><Trash2 className="w-5 h-5" /></button>
+              {/* Row 1: Airline & Flight Number */}
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                <input 
+                  type="text" 
+                  placeholder="Airline (e.g., Singapore Airlines)" 
+                  value={flight.airline || ''} 
+                  onChange={(e) => updateFlight(i, 'airline', e.target.value)} 
+                  className="px-4 py-3 bg-white border-2 border-slate-200 rounded-lg focus:border-sky-500 focus:outline-none font-medium"
+                />
+                <input 
+                  type="text" 
+                  placeholder="Flight No (e.g., SQ118)" 
+                  value={flight.flight || ''} 
+                  onChange={(e) => updateFlight(i, 'flight', e.target.value)} 
+                  className="px-4 py-3 bg-white border-2 border-slate-200 rounded-lg focus:border-sky-500 focus:outline-none"
+                />
+              </div>
+
+              {/* Row 2: Route & Times */}
+              <div className="grid grid-cols-5 gap-3 mb-3">
+                <input 
+                  type="date" 
+                  value={flight.date || ''} 
+                  onChange={(e) => updateFlight(i, 'date', e.target.value)} 
+                  className="px-3 py-2 bg-white border-2 border-slate-200 rounded-lg text-sm focus:border-sky-500 focus:outline-none"
+                />
+                <input 
+                  type="text" 
+                  placeholder="From" 
+                  value={flight.from || ''} 
+                  onChange={(e) => updateFlight(i, 'from', e.target.value)} 
+                  className="px-3 py-2 bg-white border-2 border-slate-200 rounded-lg text-sm focus:border-sky-500 focus:outline-none"
+                />
+                <input 
+                  type="text" 
+                  placeholder="To" 
+                  value={flight.to || ''} 
+                  onChange={(e) => updateFlight(i, 'to', e.target.value)} 
+                  className="px-3 py-2 bg-white border-2 border-slate-200 rounded-lg text-sm focus:border-sky-500 focus:outline-none"
+                />
+                <input 
+                  type="time" 
+                  value={flight.dep || ''} 
+                  onChange={(e) => updateFlight(i, 'dep', e.target.value)} 
+                  className="px-3 py-2 bg-white border-2 border-slate-200 rounded-lg text-sm focus:border-sky-500 focus:outline-none"
+                />
+                <input 
+                  type="time" 
+                  value={flight.arr || ''} 
+                  onChange={(e) => updateFlight(i, 'arr', e.target.value)} 
+                  className="px-3 py-2 bg-white border-2 border-slate-200 rounded-lg text-sm focus:border-sky-500 focus:outline-none"
+                />
+              </div>
+
+              {/* Row 3: PNR & E-ticket */}
+              <div className="grid grid-cols-3 gap-3">
+                <input 
+                  type="text" 
+                  placeholder="PNR (e.g., ABC123)" 
+                  value={flight.pnr || ''} 
+                  onChange={(e) => updateFlight(i, 'pnr', e.target.value)} 
+                  className="px-4 py-3 bg-white border-2 border-slate-200 rounded-lg focus:border-sky-500 focus:outline-none font-mono"
+                />
+                <input 
+                  type="text" 
+                  placeholder="E-ticket (e.g., 618-1234567890)" 
+                  value={flight.eticket || ''} 
+                  onChange={(e) => updateFlight(i, 'eticket', e.target.value)} 
+                  className="px-4 py-3 bg-white border-2 border-slate-200 rounded-lg focus:border-sky-500 focus:outline-none font-mono"
+                />
+                <button 
+                  onClick={() => removeFlight(i)} 
+                  className="text-slate-400 hover:text-red-600 hover:scale-110 transition opacity-0 group-hover:opacity-100"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </button>
               </div>
             </div>
           ))
