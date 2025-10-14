@@ -178,7 +178,7 @@ function generateEmailHtml(itinerary: any, documents: any[], customMessage?: str
           </tr>
 
           <!-- Flights -->
-          // Replace the flights section (around line 185)
+          
           ${flights.length > 0 ? `
           <tr>
             <td style="padding: 0 30px 20px 30px;">

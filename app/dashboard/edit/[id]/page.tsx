@@ -167,12 +167,13 @@ export default function EditItineraryPage() {
     window.print()
   }
 
-  function exportToICS() {
-    if (!itinerary) return
 
-    let icsContent = 'BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Greenleaf Assurance//Itinerary//EN\n'
-    
-    if (itinerary.start_date && itinerary.end_date) {
+  function exportToICS() {
+  if (!itinerary) return  // ADD THIS LINE
+  
+  let icsContent = 'BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Greenleaf Assurance//Itinerary//EN\n'
+  
+  if (itinerary.start_date && itinerary.end_date) {
       icsContent += 'BEGIN:VEVENT\n'
       icsContent += `UID:${itinerary.code || 'itinerary'}@greenleafassurance.com\n`
       icsContent += `DTSTART:${formatICSDate(itinerary.start_date)}\n`
