@@ -135,14 +135,35 @@ function generateEmailHtml(itinerary: any, documents: any[], customMessage?: str
             </td>
           </tr>
 
-          <!-- Custom Message -->
-          ${customMessage ? `
-          <tr>
-            <td style="padding: 20px 30px; background-color: #f8f9fa; border-left: 4px solid #62BBC1;">
-              <p style="margin: 0; color: #333; font-size: 14px; line-height: 1.6;">${customMessage}</p>
-            </td>
-          </tr>
-          ` : ''}
+            <!-- Custom Message -->
+
+            <tr>
+              <td style="padding: 30px; background-color: #f8f9fa; border-left: 4px solid #62BBC1;">
+                <p style="margin: 0 0 15px 0; color: #333; font-size: 16px; line-height: 1.6;">
+                  ${customMessage || `Dear ${itinerary.participants || 'Traveler'},`}
+                </p>
+                ${!customMessage ? `
+                <p style="margin: 0 0 15px 0; color: #333; font-size: 15px; line-height: 1.6;">
+                  Your complete travel itinerary for <strong>${itinerary.doc_title || 'your upcoming trip'}</strong> is ready. This document contains all essential details including flights, accommodation, site visits, and important contact information.
+                </p>
+                <p style="margin: 0 0 15px 0; color: #333; font-size: 15px; line-height: 1.6;">
+                  ${itinerary.start_date ? `Your journey begins on <strong>${new Date(itinerary.start_date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</strong>.` : ''} Please review all details carefully and contact us if you need any clarification or adjustments.
+                </p>
+                <p style="margin: 0; color: #333; font-size: 15px; line-height: 1.6;">
+                  Have a safe and productive journey!
+                </p>
+                <p style="margin: 15px 0 0 0; color: #666; font-size: 14px;">
+                  <strong>Best regards,</strong><br/>
+                  Greenleaf Assurance Travel Team
+                </p>
+                ` : `
+                <p style="margin: 15px 0 0 0; color: #666; font-size: 14px;">
+                  <strong>Best regards,</strong><br/>
+                  Greenleaf Assurance Travel Team
+                </p>
+                `}
+              </td>
+            </tr>
 
           <!-- Trip Summary -->
           <tr>
@@ -288,13 +309,20 @@ function generateEmailHtml(itinerary: any, documents: any[], customMessage?: str
             <td style="padding: 0 30px 20px 30px;">
               <h3 style="margin: 0 0 15px 0; color: #333; font-size: 18px;">📎 Attached Documents</h3>
               <table width="100%" cellpadding="8" cellspacing="0" border="0" style="background-color: #f8f9fa; border-radius: 6px;">
-                ${documents.map((d: any) => `
-                <tr>
-                  <td style="color: #333; font-size: 13px;">
-                    📄 <a href="${d.file_url}" style="color: #62BBC1; text-decoration: none;">${d.file_name}</a>
-                  </td>
-                </tr>
-                `).join('')}
+              ${documents.map((d: any) => `
+              <tr>
+                <td style="padding: 12px 0; border-bottom: 1px solid #e0e0e0;">
+                  <a href="${d.file_url}" 
+                    style="display: inline-flex; align-items: center; gap: 8px; color: #62BBC1; text-decoration: none; font-size: 14px; font-weight: 600;">
+                    <span style="font-size: 20px;">📄</span>
+                    <span>${d.file_name}</span>
+                  </a>
+                  <div style="color: #666; font-size: 11px; margin-top: 4px; margin-left: 28px;">
+                    ${d.file_size ? `${(d.file_size / 1024).toFixed(1)} KB` : ''} • Click to download
+                  </div>
+                </td>
+              </tr>
+              `).join('')}
               </table>
             </td>
           </tr>
