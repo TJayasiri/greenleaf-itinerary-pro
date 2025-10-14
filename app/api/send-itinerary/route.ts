@@ -5,20 +5,41 @@ import { Resend } from 'resend'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-const resend = new Resend(process.env.RESEND_API_KEY!)
 
 export async function POST(request: NextRequest) {
   try {
-    const { itineraryId, email, customMessage } = await request.json()
+    // Parse request body
+    const body = await request.json()
+    console.log('📧 Email request received:', { 
+      itineraryId: body.itineraryId, 
+      email: body.email,
+      hasCustomMessage: !!body.customMessage 
+    })
 
+    const { itineraryId, email, customMessage } = body
+
+    // Validate inputs
     if (!email || !itineraryId) {
+      console.error('❌ Missing required fields:', { email, itineraryId })
       return NextResponse.json(
         { error: 'Email and itineraryId are required' },
         { status: 400 }
       )
     }
 
+    // Check API key
+    if (!process.env.RESEND_API_KEY) {
+      console.error('❌ RESEND_API_KEY not configured')
+      return NextResponse.json(
+        { error: 'Email service not configured. Please add RESEND_API_KEY to environment variables.' },
+        { status: 500 }
+      )
+    }
+
+    const resend = new Resend(process.env.RESEND_API_KEY)
+
     // Get itinerary data
+    console.log('📋 Fetching itinerary:', itineraryId)
     const supabase = createClient(supabaseUrl, supabaseKey)
     const { data: itinerary, error } = await supabase
       .from('itineraries')
@@ -27,11 +48,14 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (error || !itinerary) {
+      console.error('❌ Itinerary not found:', error)
       return NextResponse.json(
         { error: 'Itinerary not found' },
         { status: 404 }
       )
     }
+
+    console.log('✅ Itinerary found:', itinerary.code)
 
     // Get documents
     const { data: documents } = await supabase
@@ -39,28 +63,37 @@ export async function POST(request: NextRequest) {
       .select('*')
       .eq('itinerary_id', itineraryId)
 
+    console.log('📎 Documents found:', documents?.length || 0)
+
     // Generate email HTML
     const emailHtml = generateEmailHtml(itinerary, documents || [], customMessage)
 
     // Send email via Resend
+    console.log('📤 Sending email to:', email)
+    
+    // Use test domain for now
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev'
+    
     const { data, error: sendError } = await resend.emails.send({
-      from: 'Greenleaf Assurance <noreply@greenleafassurance.com>',
+      from: `Greenleaf Assurance <${fromEmail}>`,
       to: [email],
       subject: `Your Travel Itinerary: ${itinerary.doc_title || itinerary.code}`,
       html: emailHtml,
     })
 
     if (sendError) {
-      console.error('Resend error:', sendError)
+      console.error('❌ Resend error:', sendError)
       return NextResponse.json(
         { error: `Failed to send email: ${sendError.message}` },
         { status: 500 }
       )
     }
 
+    console.log('✅ Email sent successfully:', data)
     return NextResponse.json({ success: true, data })
+    
   } catch (err: any) {
-    console.error('Email API error:', err)
+    console.error('❌ Email API error:', err)
     return NextResponse.json(
       { error: err.message || 'Internal server error' },
       { status: 500 }
