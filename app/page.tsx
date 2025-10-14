@@ -12,9 +12,19 @@ export default function HomePage() {
   const [itinerary, setItinerary] = useState<Itinerary | null>(null)
   const [error, setError] = useState('')
 
-  async function handleLookup(e: React.FormEvent) {
-    e.preventDefault()
-    if (!code.trim()) return
+  // Auto-lookup from URL on mount
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const codeFromUrl = urlParams.get('code')
+    if (codeFromUrl) {
+      setCode(codeFromUrl.toUpperCase())
+      performLookup(codeFromUrl.toUpperCase())
+    }
+  }, [])
+
+  // EXTRACTED lookup logic into separate function
+  async function performLookup(searchCode: string) {
+    if (!searchCode.trim()) return
     setLoading(true)
     setError('')
     setItinerary(null)
@@ -22,7 +32,7 @@ export default function HomePage() {
       const { data, error: err } = await supabase
         .from('itineraries')
         .select('*')
-        .eq('code', code.toUpperCase().trim())
+        .eq('code', searchCode.toUpperCase().trim())
         .single()
 
       if (err || !data) {
@@ -36,6 +46,14 @@ export default function HomePage() {
       setLoading(false)
     }
   }
+
+  // Form submit handler calls performLookup
+  async function handleLookup(e: React.FormEvent) {
+    e.preventDefault()
+    performLookup(code)
+  }
+
+  // ... rest of your code
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">

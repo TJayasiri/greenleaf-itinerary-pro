@@ -72,7 +72,10 @@ export async function POST(request: NextRequest) {
     console.log('📤 Sending email to:', email)
     
     // Use test domain for now
-    const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev'
+    //const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev'
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'noreply@greenleafassurance.com'
+
+
     
     const { data, error: sendError } = await resend.emails.send({
       from: `Greenleaf Assurance <${fromEmail}>`,
