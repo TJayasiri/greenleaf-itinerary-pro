@@ -5,346 +5,206 @@ import { Resend } from 'resend'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const resendApiKey = process.env.RESEND_API_KEY
+const fromEmail = process.env.RESEND_FROM_EMAIL || 'Greenleaf Assurance <noreply@greenleafassurance.com>'
+const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://itinerary.greenleafassurance.com'
 
-export async function POST(request: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
-    // Parse request body
-    const body = await request.json()
-    console.log('📧 Email request received:', { 
-      itineraryId: body.itineraryId, 
-      email: body.email,
-      hasCustomMessage: !!body.customMessage 
-    })
+    const body = await req.json()
+    const { itineraryId, email, customMessage } = body || {}
 
-    const { itineraryId, email, customMessage } = body
+    console.log('📨 Incoming itinerary email request', { itineraryId, email })
 
-    // Validate inputs
+    // --- Validation ---
     if (!email || !itineraryId) {
-      console.error('❌ Missing required fields:', { email, itineraryId })
-      return NextResponse.json(
-        { error: 'Email and itineraryId are required' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Missing email or itineraryId' }, { status: 400 })
+    }
+    if (!resendApiKey) {
+      return NextResponse.json({ error: 'Email service not configured' }, { status: 500 })
     }
 
-    // Check API key
-    if (!process.env.RESEND_API_KEY) {
-      console.error('❌ RESEND_API_KEY not configured')
-      return NextResponse.json(
-        { error: 'Email service not configured. Please add RESEND_API_KEY to environment variables.' },
-        { status: 500 }
-      )
-    }
-
-    const resend = new Resend(process.env.RESEND_API_KEY)
-
-    // Get itinerary data
-    console.log('📋 Fetching itinerary:', itineraryId)
+    // --- Initialize clients ---
     const supabase = createClient(supabaseUrl, supabaseKey)
-    const { data: itinerary, error } = await supabase
+    const resend = new Resend(resendApiKey)
+
+    // --- Fetch itinerary ---
+    const { data: itinerary, error: itineraryError } = await supabase
       .from('itineraries')
       .select('*')
       .eq('id', itineraryId)
       .single()
 
-    if (error || !itinerary) {
-      console.error('❌ Itinerary not found:', error)
-      return NextResponse.json(
-        { error: 'Itinerary not found' },
-        { status: 404 }
-      )
+    if (itineraryError || !itinerary) {
+      console.error('❌ Itinerary fetch failed:', itineraryError)
+      return NextResponse.json({ error: 'Itinerary not found' }, { status: 404 })
     }
 
-    console.log('✅ Itinerary found:', itinerary.code)
-
-    // Get documents
+    // --- Fetch linked documents ---
     const { data: documents } = await supabase
       .from('documents')
       .select('*')
       .eq('itinerary_id', itineraryId)
 
-    console.log('📎 Documents found:', documents?.length || 0)
+    console.log(`📋 Preparing itinerary email for ${email}: ${itinerary.code}`)
 
-    // Generate email HTML
-    const emailHtml = generateEmailHtml(itinerary, documents || [], customMessage)
+    // --- Compose email content ---
+    const html = generateEmailHtml(itinerary, documents || [], customMessage)
 
-    // Send email via Resend
-    console.log('📤 Sending email to:', email)
-    
-    // Use test domain for now
-    //const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev'
-    const fromEmail = process.env.RESEND_FROM_EMAIL || 'noreply@greenleafassurance.com'
-
-
-    
+    // --- Send email ---
     const { data, error: sendError } = await resend.emails.send({
-      from: `Greenleaf Assurance <${fromEmail}>`,
+      from: fromEmail,
       to: [email],
       subject: `Your Travel Itinerary: ${itinerary.doc_title || itinerary.code}`,
-      html: emailHtml,
+      html,
     })
 
     if (sendError) {
-      console.error('❌ Resend error:', sendError)
-      return NextResponse.json(
-        { error: `Failed to send email: ${sendError.message}` },
-        { status: 500 }
-      )
+      console.error('❌ Email send failed:', sendError)
+      return NextResponse.json({ error: `Failed to send email: ${sendError.message}` }, { status: 500 })
     }
 
-    console.log('✅ Email sent successfully:', data)
+    console.log('✅ Email dispatched successfully:', data?.id)
     return NextResponse.json({ success: true, data })
-    
   } catch (err: any) {
-    console.error('❌ Email API error:', err)
-    return NextResponse.json(
-      { error: err.message || 'Internal server error' },
-      { status: 500 }
-    )
+    console.error('❌ Internal error:', err)
+    return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 })
   }
 }
 
+/**
+ * Build structured HTML + JSON-LD travel data for Gmail/TripIt/Outlook
+ */
 function generateEmailHtml(itinerary: any, documents: any[], customMessage?: string) {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://itinerary.greenleafassurance.com'
   const lookupUrl = `${appUrl}/?code=${itinerary.code}`
-
   const flights = itinerary.flights || []
-  const visits = itinerary.visits || []
-  const accommodation = itinerary.accommodation || []
-  const transport = itinerary.transport || []
+  const hotels = itinerary.accommodation || []
+  const tz = itinerary.timezone || '+07:00'
 
+  // --- Structured data blocks (separate per entity) ---
+  const structuredBlocks: string[] = []
+
+  flights.forEach((f: any) => {
+    structuredBlocks.push(JSON.stringify({
+      '@context': 'http://schema.org',
+      '@type': 'FlightReservation',
+      reservationNumber: f.pnr || f.eticket || 'TBD',
+      reservationStatus: 'http://schema.org/Confirmed',
+      underName: { '@type': 'Person', name: itinerary.participants?.split(';')[0] || 'Traveler' },
+      reservationFor: {
+        '@type': 'Flight',
+        flightNumber: f.flight || '',
+        airline: { '@type': 'Airline', name: f.airline || '', iataCode: f.airline?.substring(0, 2) || '' },
+        departureAirport: { '@type': 'Airport', name: `${f.from} Airport`, iataCode: f.from || '' },
+        departureTime: `${f.date}T${f.dep || '00:00'}:00${tz}`,
+        arrivalAirport: { '@type': 'Airport', name: `${f.to} Airport`, iataCode: f.to || '' },
+        arrivalTime: `${f.date}T${f.arr || '00:00'}:00${tz}`
+      }
+    }, null, 2))
+  })
+
+  hotels.forEach((h: any) => {
+    structuredBlocks.push(JSON.stringify({
+      '@context': 'http://schema.org',
+      '@type': 'LodgingReservation',
+      reservationNumber: h.confirmation || 'TBD',
+      reservationStatus: 'http://schema.org/Confirmed',
+      underName: { '@type': 'Person', name: itinerary.participants?.split(';')[0] || 'Traveler' },
+      reservationFor: {
+        '@type': 'LodgingBusiness',
+        name: h.hotel_name || '',
+        address: { '@type': 'PostalAddress', streetAddress: h.address || '' },
+        telephone: h.phone || ''
+      },
+      checkinTime: `${h.checkin}T15:00:00${tz}`,
+      checkoutTime: `${h.checkout}T11:00:00${tz}`
+    }, null, 2))
+  })
+
+  // --- HTML email ---
   return `
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
   <title>Travel Itinerary</title>
+  ${structuredBlocks.map(b => `<script type="application/ld+json">\n${b}\n</script>`).join('\n')}
 </head>
-<body style="margin: 0; padding: 0; background-color: #f5f5f5; font-family: Arial, sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f5f5f5; padding: 20px;">
-    <tr>
-      <td align="center">
-        <table width="600" cellpadding="0" cellspacing="0" border="0" style="background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-          
-          <!-- Header -->
-          <tr>
-            <td style="background-color: #62BBC1; padding: 30px; text-align: center;">
-              <h1 style="margin: 0; color: white; font-size: 28px;">Your Travel Itinerary</h1>
-              <p style="margin: 10px 0 0 0; color: white; font-size: 14px;">Reference Code: <strong>${itinerary.code}</strong></p>
-            </td>
-          </tr>
+<body style="margin:0;padding:0;background:#f5f5f5;font-family:Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="padding:20px;background:#f5f5f5;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" border="0" style="background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+        <tr>
+          <td style="background:#62BBC1;color:#fff;padding:30px;text-align:center;">
+            <h1 style="margin:0;font-size:26px;">Your Travel Itinerary</h1>
+            <p style="margin-top:8px;font-size:14px;">Reference: <strong>${itinerary.code}</strong></p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:25px;background:#f8f9fa;border-left:4px solid #62BBC1;">
+            <p style="margin:0 0 10px 0;font-size:16px;color:#333;">${customMessage || `Dear ${itinerary.participants || 'Traveler'},`}</p>
+            ${!customMessage ? `
+            <p style="font-size:15px;color:#333;line-height:1.5;">Your full travel itinerary for <strong>${itinerary.doc_title || 'your trip'}</strong> is ready.</p>
+            <p style="font-size:15px;color:#333;">Have a safe and successful journey!</p>
+            ` : ''}
+            <p style="margin-top:12px;color:#666;font-size:13px;">Best regards,<br/>Greenleaf Assurance Travel Desk</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:25px;">
+            <h2 style="margin:0 0 15px 0;color:#333;font-size:20px;border-bottom:2px solid #62BBC1;padding-bottom:8px;">
+              ${itinerary.doc_title || 'Business Trip'}
+            </h2>
+            <table width="100%" cellpadding="6" cellspacing="0" style="margin-bottom:20px;font-size:14px;color:#333;">
+              <tr><td width="140"><strong>Traveler(s):</strong></td><td>${itinerary.participants || 'N/A'}</td></tr>
+              <tr><td><strong>Purpose:</strong></td><td>${itinerary.purpose || 'N/A'}</td></tr>
+              <tr><td><strong>Dates:</strong></td><td>${itinerary.start_date} – ${itinerary.end_date}</td></tr>
+              <tr><td><strong>Contact:</strong></td><td>${itinerary.phones || 'N/A'}</td></tr>
+            </table>
+            <div style="text-align:center;margin:30px 0;">
+              <a href="${lookupUrl}" style="display:inline-block;background:#62BBC1;color:#fff;padding:14px 38px;border-radius:6px;text-decoration:none;font-weight:bold;">
+                View Itinerary Online
+              </a>
+            </div>
+          </td>
+        </tr>
 
-            <!-- Custom Message -->
+        ${flights.length > 0 ? `
+        <tr><td style="padding:0 25px 25px 25px;">
+          <h3 style="font-size:17px;margin-bottom:10px;color:#333;">✈️ Flight Schedule</h3>
+          ${flights.map((f: any) => `
+            <div style="background:#f8f9fa;border-radius:6px;padding:10px 12px;margin-bottom:8px;">
+              <div style="font-weight:bold;color:#333;">${f.airline || ''} ${f.flight} (${f.from} → ${f.to})</div>
+              <div style="font-size:13px;color:#555;">${f.date} | Dep ${f.dep} → Arr ${f.arr}</div>
+              ${f.pnr ? `<div style="font-size:12px;color:#62BBC1;">PNR: ${f.pnr}</div>` : ''}
+            </div>
+          `).join('')}
+        </td></tr>` : ''}
 
-            <tr>
-              <td style="padding: 30px; background-color: #f8f9fa; border-left: 4px solid #62BBC1;">
-                <p style="margin: 0 0 15px 0; color: #333; font-size: 16px; line-height: 1.6;">
-                  ${customMessage || `Dear ${itinerary.participants || 'Traveler'},`}
-                </p>
-                ${!customMessage ? `
-                <p style="margin: 0 0 15px 0; color: #333; font-size: 15px; line-height: 1.6;">
-                  Your complete travel itinerary for <strong>${itinerary.doc_title || 'your upcoming trip'}</strong> is ready. This document contains all essential details including flights, accommodation, site visits, and important contact information.
-                </p>
-                <p style="margin: 0 0 15px 0; color: #333; font-size: 15px; line-height: 1.6;">
-                  ${itinerary.start_date ? `Your journey begins on <strong>${new Date(itinerary.start_date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</strong>.` : ''} Please review all details carefully and contact us if you need any clarification or adjustments.
-                </p>
-                <p style="margin: 0; color: #333; font-size: 15px; line-height: 1.6;">
-                  Have a safe and productive journey!
-                </p>
-                <p style="margin: 15px 0 0 0; color: #666; font-size: 14px;">
-                  <strong>Best regards,</strong><br/>
-                  Greenleaf Assurance Travel Team
-                </p>
-                ` : `
-                <p style="margin: 15px 0 0 0; color: #666; font-size: 14px;">
-                  <strong>Best regards,</strong><br/>
-                  Greenleaf Assurance Travel Team
-                </p>
-                `}
-              </td>
-            </tr>
+        ${hotels.length > 0 ? `
+        <tr><td style="padding:0 25px 25px 25px;">
+          <h3 style="font-size:17px;margin-bottom:10px;color:#333;">🏨 Accommodation</h3>
+          ${hotels.map((h: any) => `
+            <div style="background:#f8f9fa;border-radius:6px;padding:10px 12px;margin-bottom:8px;">
+              <div style="font-weight:bold;color:#333;">${h.hotel_name}</div>
+              <div style="font-size:13px;color:#555;">${h.address || ''}</div>
+              <div style="font-size:13px;color:#555;">Check-in ${h.checkin} | Check-out ${h.checkout}</div>
+              ${h.phone ? `<div style="font-size:13px;color:#555;">☎ ${h.phone}</div>` : ''}
+              ${h.confirmation ? `<div style="font-size:12px;color:#62BBC1;">Confirmation: ${h.confirmation}</div>` : ''}
+            </div>
+          `).join('')}
+        </td></tr>` : ''}
 
-          <!-- Trip Summary -->
-          <tr>
-            <td style="padding: 30px;">
-              <h2 style="margin: 0 0 20px 0; color: #333; font-size: 22px; border-bottom: 2px solid #62BBC1; padding-bottom: 10px;">
-                ${itinerary.doc_title || 'Business Trip'}
-              </h2>
-              
-              <table width="100%" cellpadding="8" cellspacing="0" border="0" style="margin-bottom: 20px;">
-                <tr>
-                  <td style="color: #666; font-size: 14px; width: 150px;"><strong>Travelers:</strong></td>
-                  <td style="color: #333; font-size: 14px;">${itinerary.participants || 'N/A'}</td>
-                </tr>
-                <tr>
-                  <td style="color: #666; font-size: 14px;"><strong>Purpose:</strong></td>
-                  <td style="color: #333; font-size: 14px;">${itinerary.purpose || 'N/A'}</td>
-                </tr>
-                <tr>
-                  <td style="color: #666; font-size: 14px;"><strong>Dates:</strong></td>
-                  <td style="color: #333; font-size: 14px;">${itinerary.start_date} to ${itinerary.end_date}</td>
-                </tr>
-                <tr>
-                  <td style="color: #666; font-size: 14px;"><strong>Contact:</strong></td>
-                  <td style="color: #333; font-size: 14px;">${itinerary.phones || 'N/A'}</td>
-                </tr>
-              </table>
-
-              <!-- View Online Button -->
-              <div style="text-align: center; margin: 30px 0;">
-                <a href="${lookupUrl}" style="display: inline-block; background-color: #62BBC1; color: white; padding: 15px 40px; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: bold;">
-                  View Full Itinerary Online
-                </a>
-                <p style="margin: 10px 0 0 0; color: #666; font-size: 12px;">Or visit: ${lookupUrl}</p>
-              </div>
-            </td>
-          </tr>
-
-          <!-- Flights -->
-          
-          ${flights.length > 0 ? `
-          <tr>
-            <td style="padding: 0 30px 20px 30px;">
-              <h3 style="margin: 0 0 15px 0; color: #333; font-size: 18px;">✈️ Flight Schedule</h3>
-              <table width="100%" cellpadding="10" cellspacing="0" border="0" style="background-color: #f8f9fa; border-radius: 6px;">
-                ${flights.map((f: any) => `
-                <tr>
-                  <td style="border-bottom: 1px solid #e0e0e0;">
-                    <div style="color: #333; font-size: 14px; font-weight: bold; margin-bottom: 5px;">
-                      ${f.airline || 'Airline'} ${f.flight} - ${f.date}
-                    </div>
-                    <div style="color: #666; font-size: 13px; margin-bottom: 5px;">
-                      ${f.from} → ${f.to} | Dep: ${f.dep} | Arr: ${f.arr}
-                    </div>
-                    ${f.pnr ? `<div style="color: #666; font-size: 12px;">PNR: <span style="font-family: monospace; color: #62BBC1;">${f.pnr}</span></div>` : ''}
-                    ${f.eticket ? `<div style="color: #666; font-size: 12px;">E-ticket: <span style="font-family: monospace; color: #62BBC1;">${f.eticket}</span></div>` : ''}
-                  </td>
-                </tr>
-                `).join('')}
-              </table>
-            </td>
-          </tr>
-          ` : ''}
-
-          <!-- Accommodation -->
-          ${accommodation.length > 0 ? `
-          <tr>
-            <td style="padding: 0 30px 20px 30px;">
-              <h3 style="margin: 0 0 15px 0; color: #333; font-size: 18px;">🏨 Accommodation</h3>
-              <table width="100%" cellpadding="10" cellspacing="0" border="0" style="background-color: #f8f9fa; border-radius: 6px;">
-                ${accommodation.map((h: any) => `
-                <tr>
-                  <td style="border-bottom: 1px solid #e0e0e0;">
-                    <div style="color: #333; font-size: 14px; font-weight: bold; margin-bottom: 5px;">
-                      ${h.hotel_name}
-                    </div>
-                    <div style="color: #666; font-size: 13px; margin-bottom: 3px;">
-                      Check-in: ${h.checkin} | Check-out: ${h.checkout}
-                    </div>
-                    <div style="color: #666; font-size: 13px;">
-                      ${h.address || ''} ${h.phone ? `| Phone: ${h.phone}` : ''}
-                    </div>
-                    ${h.confirmation ? `<div style="color: #62BBC1; font-size: 12px; margin-top: 5px;">Confirmation: ${h.confirmation}</div>` : ''}
-                  </td>
-                </tr>
-                `).join('')}
-              </table>
-            </td>
-          </tr>
-          ` : ''}
-
-          <!-- Site Visits -->
-          ${visits.length > 0 ? `
-          <tr>
-            <td style="padding: 0 30px 20px 30px;">
-              <h3 style="margin: 0 0 15px 0; color: #333; font-size: 18px;">📍 Site Visits</h3>
-              <table width="100%" cellpadding="10" cellspacing="0" border="0" style="background-color: #f8f9fa; border-radius: 6px;">
-                ${visits.map((v: any) => `
-                <tr>
-                  <td style="border-bottom: 1px solid #e0e0e0;">
-                    <div style="color: #333; font-size: 14px; font-weight: bold; margin-bottom: 5px;">
-                      ${v.date} - ${v.activity}
-                    </div>
-                    <div style="color: #666; font-size: 13px;">
-                      ${v.facility} | ${v.address}
-                    </div>
-                    ${v.transport ? `<div style="color: #666; font-size: 12px; margin-top: 5px;">Transport: ${v.transport}</div>` : ''}
-                  </td>
-                </tr>
-                `).join('')}
-              </table>
-            </td>
-          </tr>
-          ` : ''}
-
-          <!-- Ground Transport -->
-          ${transport.length > 0 ? `
-          <tr>
-            <td style="padding: 0 30px 20px 30px;">
-              <h3 style="margin: 0 0 15px 0; color: #333; font-size: 18px;">🚗 Ground Transportation</h3>
-              <table width="100%" cellpadding="10" cellspacing="0" border="0" style="background-color: #f8f9fa; border-radius: 6px;">
-                ${transport.map((t: any) => `
-                <tr>
-                  <td style="border-bottom: 1px solid #e0e0e0;">
-                    <div style="color: #333; font-size: 14px; font-weight: bold; margin-bottom: 5px;">
-                      ${t.type} - ${t.company}
-                    </div>
-                    <div style="color: #666; font-size: 13px;">
-                      Pickup: ${t.pickup_time} at ${t.pickup_location}
-                    </div>
-                    ${t.confirmation ? `<div style="color: #62BBC1; font-size: 12px; margin-top: 5px;">Confirmation: ${t.confirmation}</div>` : ''}
-                    ${t.notes ? `<div style="color: #666; font-size: 12px; margin-top: 5px; font-style: italic;">${t.notes}</div>` : ''}
-                  </td>
-                </tr>
-                `).join('')}
-              </table>
-            </td>
-          </tr>
-          ` : ''}
-
-          <!-- Documents -->
-          ${documents.length > 0 ? `
-          <tr>
-            <td style="padding: 0 30px 20px 30px;">
-              <h3 style="margin: 0 0 15px 0; color: #333; font-size: 18px;">📎 Attached Documents</h3>
-              <table width="100%" cellpadding="8" cellspacing="0" border="0" style="background-color: #f8f9fa; border-radius: 6px;">
-              ${documents.map((d: any) => `
-              <tr>
-                <td style="padding: 12px 0; border-bottom: 1px solid #e0e0e0;">
-                  <a href="${d.file_url}" 
-                    style="display: inline-flex; align-items: center; gap: 8px; color: #62BBC1; text-decoration: none; font-size: 14px; font-weight: 600;">
-                    <span style="font-size: 20px;">📄</span>
-                    <span>${d.file_name}</span>
-                  </a>
-                  <div style="color: #666; font-size: 11px; margin-top: 4px; margin-left: 28px;">
-                    ${d.file_size ? `${(d.file_size / 1024).toFixed(1)} KB` : ''} • Click to download
-                  </div>
-                </td>
-              </tr>
-              `).join('')}
-              </table>
-            </td>
-          </tr>
-          ` : ''}
-
-          <!-- Footer -->
-          <tr>
-            <td style="background-color: #f8f9fa; padding: 30px; text-align: center; border-top: 1px solid #e0e0e0;">
-              <p style="margin: 0 0 10px 0; color: #666; font-size: 12px;">
-                This itinerary was sent by <strong>Greenleaf Assurance</strong>
-              </p>
-              <p style="margin: 0; color: #999; font-size: 11px;">
-                For questions or changes, please contact your travel coordinator.
-              </p>
-            </td>
-          </tr>
-
-        </table>
-      </td>
-    </tr>
+        <tr>
+          <td style="background:#f8f9fa;padding:20px;text-align:center;border-top:1px solid #e0e0e0;">
+            <p style="font-size:12px;color:#777;">This itinerary was sent by <strong>Greenleaf Assurance</strong>.</p>
+            <p style="font-size:11px;color:#aaa;">For assistance, contact your assigned travel coordinator.</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
   </table>
 </body>
-</html>
-  `
+</html>`
 }
