@@ -1,16 +1,19 @@
+// File: app/admin/page.tsx
 'use client'
 
 import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
+import { supabase, generateItineraryCode } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
-import { UserPlus, Users, FileText, LogOut, Trash2 } from 'lucide-react'
+import { UserPlus, Users, FileText, LogOut, Plus, X } from 'lucide-react'
 
 export default function AdminPage() {
   const router = useRouter()
+  const [user, setUser] = useState<any>(null)
   const [users, setUsers] = useState<any[]>([])
   const [itineraries, setItineraries] = useState<any[]>([])
   const [stats, setStats] = useState({ users: 0, itineraries: 0, thisMonth: 0 })
   const [showAddUser, setShowAddUser] = useState(false)
+  const [showCreateItin, setShowCreateItin] = useState(false)
 
   useEffect(() => {
     checkAdmin()
@@ -23,6 +26,7 @@ export default function AdminPage() {
       router.push('/login')
       return
     }
+    setUser(user)
 
     const { data: role } = await supabase
       .from('user_roles')
@@ -127,17 +131,28 @@ export default function AdminPage() {
           </div>
         </div>
 
+        {/* Quick Actions */}
+        <div className="flex gap-4 mb-6">
+          <button
+            onClick={() => setShowCreateItin(true)}
+            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#62BBC1] to-[#51aab0] text-white rounded-lg hover:shadow-lg transition font-semibold"
+          >
+            <Plus className="w-5 h-5" />
+            Create New Itinerary
+          </button>
+          <button
+            onClick={() => setShowAddUser(true)}
+            className="flex items-center gap-2 px-6 py-3 bg-white border-2 border-slate-200 text-slate-700 rounded-lg hover:border-[#62BBC1] transition font-semibold"
+          >
+            <UserPlus className="w-5 h-5" />
+            Add User
+          </button>
+        </div>
+
         {/* Users Section */}
         <section className="bg-white rounded-xl shadow-sm border p-6 mb-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-bold">Users</h2>
-            <button
-              onClick={() => setShowAddUser(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-[#62BBC1] text-white rounded-lg hover:bg-[#51aab0] transition"
-            >
-              <UserPlus className="w-4 h-4" />
-              Add User
-            </button>
           </div>
 
           <div className="overflow-x-auto">
@@ -186,7 +201,6 @@ export default function AdminPage() {
                 </tr>
               </thead>
               <tbody className="divide-y">
-
                 {itineraries.slice(0, 10).map((itin) => (
                   <tr
                     key={itin.id}
@@ -209,19 +223,30 @@ export default function AdminPage() {
                     </td>
                   </tr>
                 ))}
-
               </tbody>
             </table>
           </div>
         </section>
       </main>
 
-      {/* Add User Modal */}
+      {/* Modals */}
       {showAddUser && <AddUserModal onClose={() => setShowAddUser(false)} onAdded={loadData} />}
+      {showCreateItin && (
+        <CreateItineraryModal
+          user={user}
+          onClose={() => setShowCreateItin(false)}
+          onCreated={(id) => {
+            setShowCreateItin(false)
+            loadData()
+            router.push(`/dashboard/edit/${id}`)
+          }}
+        />
+      )}
     </div>
   )
 }
 
+// Add User Modal (unchanged)
 function AddUserModal({ onClose, onAdded }: { onClose: () => void; onAdded: () => void }) {
   const [loading, setLoading] = useState(false)
   const [form, setForm] = useState({ name: '', email: '', password: '', role: 'coordinator' })
@@ -231,7 +256,6 @@ function AddUserModal({ onClose, onAdded }: { onClose: () => void; onAdded: () =
     setLoading(true)
 
     try {
-      // Call API route to create user
       const response = await fetch('/api/create-user', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -325,6 +349,168 @@ function AddUserModal({ onClose, onAdded }: { onClose: () => void; onAdded: () =
               className="flex-1 px-4 py-2 bg-[#62BBC1] text-white rounded-lg hover:bg-[#51aab0] disabled:opacity-50"
             >
               {loading ? 'Creating...' : 'Create User'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+// Create Itinerary Modal (reused from coordinator dashboard)
+function CreateItineraryModal({ user, onClose, onCreated }: { user: any; onClose: () => void; onCreated: (id: string) => void }) {
+  const [loading, setLoading] = useState(false)
+  const [form, setForm] = useState({
+    doc_title: '',
+    trip_tag: '',
+    participants: '',
+    purpose: '',
+    start_date: '',
+    end_date: '',
+  })
+
+  async function handleCreate(e: React.FormEvent) {
+    e.preventDefault()
+    setLoading(true)
+
+    try {
+      const code = generateItineraryCode()
+
+      const { data, error } = await supabase
+        .from('itineraries')
+        .insert({
+          code,
+          created_by: user.id,
+          ...form,
+          flights: [],
+          visits: [],
+          accommodation: [],
+          transport: [],
+          travel_docs: {},
+          status: 'draft',
+        })
+        .select()
+        .single()
+
+      if (error) throw error
+
+      onCreated(data.id)
+    } catch (err: any) {
+      console.error('Create error:', err)
+      alert('Failed to create itinerary: ' + err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="sticky top-0 bg-gradient-to-r from-slate-900 to-slate-800 text-white p-8 rounded-t-3xl">
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="text-2xl font-bold mb-1">Create New Itinerary</h2>
+              <p className="text-white/70 text-sm">Fill in the details to get started</p>
+            </div>
+            <button onClick={onClose} className="text-white/70 hover:text-white hover:scale-110 transition">
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+        </div>
+
+        <form onSubmit={handleCreate} className="p-8 space-y-6">
+          <div>
+            <label className="block text-sm font-bold text-slate-700 mb-2">Document Title *</label>
+            <input
+              type="text"
+              value={form.doc_title}
+              onChange={(e) => setForm({ ...form, doc_title: e.target.value })}
+              placeholder="e.g., Singapore Business Trip"
+              className="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl focus:border-[#62BBC1] focus:ring-4 focus:ring-[#62BBC1]/10 focus:outline-none transition-all"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold text-slate-700 mb-2">Trip Tag *</label>
+            <input
+              type="text"
+              value={form.trip_tag}
+              onChange={(e) => setForm({ ...form, trip_tag: e.target.value })}
+              placeholder="e.g., Management Support"
+              className="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl focus:border-[#62BBC1] focus:ring-4 focus:ring-[#62BBC1]/10 focus:outline-none transition-all"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold text-slate-700 mb-2">Participants *</label>
+            <input
+              type="text"
+              value={form.participants}
+              onChange={(e) => setForm({ ...form, participants: e.target.value })}
+              placeholder="e.g., John Doe; Jane Smith"
+              className="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl focus:border-[#62BBC1] focus:ring-4 focus:ring-[#62BBC1]/10 focus:outline-none transition-all"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold text-slate-700 mb-2">Purpose *</label>
+            <input
+              type="text"
+              value={form.purpose}
+              onChange={(e) => setForm({ ...form, purpose: e.target.value })}
+              placeholder="e.g., Business Support Services"
+              className="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl focus:border-[#62BBC1] focus:ring-4 focus:ring-[#62BBC1]/10 focus:outline-none transition-all"
+              required
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-bold text-slate-700 mb-2">Start Date *</label>
+              <input
+                type="date"
+                value={form.start_date}
+                onChange={(e) => setForm({ ...form, start_date: e.target.value })}
+                className="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl focus:border-[#62BBC1] focus:ring-4 focus:ring-[#62BBC1]/10 focus:outline-none transition-all"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-slate-700 mb-2">End Date *</label>
+              <input
+                type="date"
+                value={form.end_date}
+                onChange={(e) => setForm({ ...form, end_date: e.target.value })}
+                className="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl focus:border-[#62BBC1] focus:ring-4 focus:ring-[#62BBC1]/10 focus:outline-none transition-all"
+                required
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-4 pt-6">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-6 py-3 border-2 border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 transition font-semibold"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 px-6 py-3 bg-gradient-to-r from-[#62BBC1] to-[#51aab0] text-white rounded-xl hover:shadow-xl hover:scale-105 disabled:opacity-50 disabled:scale-100 transition-all font-semibold"
+            >
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Creating...
+                </span>
+              ) : (
+                'Create & Continue'
+              )}
             </button>
           </div>
         </form>
