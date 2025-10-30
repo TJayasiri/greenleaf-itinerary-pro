@@ -1,4 +1,4 @@
-// file: app/page.tsx
+// File: app/page.tsx
 'use client'
 
 import { useEffect, useState } from 'react'
@@ -6,11 +6,20 @@ import { supabase, type Itinerary } from '@/lib/supabase'
 import Link from 'next/link'
 import { Search, Plane, Lock, Printer, ArrowLeft, Calendar as CalendarIcon, MapPin, Building2, FileText, Download, Users, Phone, Target, Factory, Clock } from 'lucide-react'
 
+// Premium travel images
+const TRAVEL_IMAGES = [
+  "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=1200&q=80", // Plane wing
+  "https://images.unsplash.com/photo-1583742931005-3e7e98312b15?w=1200&q=80", // Business class
+  "https://images.unsplash.com/photo-1540962351504-03099e0a754b?w=1200&q=80", // Private jet
+  "https://images.unsplash.com/photo-1556388158-158ea5ccacbd?w=1200&q=80", // Airport terminal
+]
+
 export default function HomePage() {
   const [code, setCode] = useState('')
   const [loading, setLoading] = useState(false)
   const [itinerary, setItinerary] = useState<Itinerary | null>(null)
   const [error, setError] = useState('')
+  const [bgImage] = useState(() => TRAVEL_IMAGES[Math.floor(Math.random() * TRAVEL_IMAGES.length)])
 
   // Auto-lookup from URL on mount
   useEffect(() => {
@@ -22,7 +31,6 @@ export default function HomePage() {
     }
   }, [])
 
-  // EXTRACTED lookup logic into separate function
   async function performLookup(searchCode: string) {
     if (!searchCode.trim()) return
     setLoading(true)
@@ -30,7 +38,7 @@ export default function HomePage() {
     setItinerary(null)
     try {
       const { data, error: err } = await supabase
-        .from('itineraries')
+        .from('public_itineraries')
         .select('*')
         .eq('code', searchCode.toUpperCase().trim())
         .single()
@@ -47,13 +55,10 @@ export default function HomePage() {
     }
   }
 
-  // Form submit handler calls performLookup
   async function handleLookup(e: React.FormEvent) {
     e.preventDefault()
     performLookup(code)
   }
-
-  // ... rest of your code
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
@@ -82,7 +87,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-6 py-5">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-[#62BBC1] to-[#51aab0] rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-gradient-to-br from-[#62BBC1] to-[#51aab0] rounded-xl flex items-center justify-center shadow-lg">
                 <Plane className="w-7 h-7 text-white" />
               </div>
               <div>
@@ -104,51 +109,66 @@ export default function HomePage() {
       {/* Main Content */}
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         {!itinerary ? (
-          <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-6 sm:p-12 md:p-16 print:no-shadow print:no-rounded border border-slate-200">
-            <div className="text-center mb-8 sm:mb-10">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-[#62BBC1] to-[#51aab0] rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-xl">
-                <Search className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
-              </div>
-              <h2 className="text-2xl sm:text-4xl font-bold text-slate-900 mb-2 sm:mb-3">Retrieve Your Itinerary</h2>
-              <p className="text-base sm:text-lg text-slate-600 px-4">
-                Enter your itinerary code to access travel details, bookings, and documents
-              </p>
+          <div className="relative overflow-hidden rounded-3xl shadow-2xl print:no-shadow print:no-rounded">
+            {/* Background Image Layer */}
+            <div className="absolute inset-0">
+              <img 
+                src={bgImage}
+                alt="Travel"
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-br from-slate-900/85 via-slate-800/80 to-slate-900/85 backdrop-blur-[2px]"></div>
             </div>
 
-            <form onSubmit={handleLookup} className="max-w-lg mx-auto">
-              <div className="relative">
-                <input
-                  type="text"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value.toUpperCase())}
-                  placeholder="IT-2025-ABC123"
-                  className="w-full px-5 sm:px-6 py-4 sm:py-5 text-base sm:text-lg font-mono border-2 border-slate-200 rounded-xl sm:rounded-2xl focus:border-[#62BBC1] focus:ring-4 focus:ring-[#62BBC1]/10 focus:outline-none transition-all pr-28 sm:pr-32"
-                  disabled={loading}
-                />
-                <button
-                  type="submit"
-                  disabled={loading || !code.trim()}
-                  className="absolute right-2 top-2 px-4 sm:px-8 py-2 sm:py-3 bg-gradient-to-r from-[#62BBC1] to-[#51aab0] text-white rounded-lg sm:rounded-xl hover:shadow-lg hover:scale-105 disabled:opacity-50 disabled:scale-100 transition-all flex items-center gap-2 font-medium text-sm sm:text-base"
-                >
-                  <Search className="w-4 h-4 sm:w-5 sm:h-5" />
-                  <span className="hidden sm:inline">{loading ? 'Searching...' : 'Search'}</span>
-                  <span className="sm:hidden">{loading ? '...' : 'Go'}</span>
-                </button>
+            {/* Content Layer */}
+            <div className="relative p-6 sm:p-12 md:p-16">
+              <div className="text-center mb-8 sm:mb-10">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-[#62BBC1] to-[#51aab0] rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-2xl">
+                  <Search className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
+                </div>
+                <h2 className="text-2xl sm:text-4xl font-bold text-white mb-2 sm:mb-3">Retrieve Your Itinerary</h2>
+                <p className="text-base sm:text-lg text-white/80 px-4">
+                  Enter your itinerary code to access travel details, bookings, and documents
+                </p>
               </div>
 
-              {error && (
-                <div className="mt-5 p-5 bg-red-50 border-2 border-red-200 rounded-xl text-red-700 flex items-start gap-3">
-                  <div className="w-5 h-5 bg-red-200 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <span className="text-red-700 text-xs font-bold">!</span>
-                  </div>
-                  <span className="font-medium">{error}</span>
+              <form onSubmit={handleLookup} className="max-w-lg mx-auto">
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={code}
+                    onChange={(e) => setCode(e.target.value.toUpperCase())}
+                    placeholder="IT-2025-ABC123"
+                    className="w-full px-5 sm:px-6 py-4 sm:py-5 text-base sm:text-lg font-mono bg-white/95 backdrop-blur-sm border-2 border-white/20 rounded-xl sm:rounded-2xl focus:border-[#62BBC1] focus:ring-4 focus:ring-[#62BBC1]/30 focus:outline-none transition-all pr-28 sm:pr-32 shadow-xl"
+                    disabled={loading}
+                  />
+                  <button
+                    type="submit"
+                    disabled={loading || !code.trim()}
+                    className="absolute right-2 top-2 px-4 sm:px-8 py-2 sm:py-3 bg-gradient-to-r from-[#62BBC1] to-[#51aab0] text-white rounded-lg sm:rounded-xl hover:shadow-lg hover:scale-105 disabled:opacity-50 disabled:scale-100 transition-all flex items-center gap-2 font-medium text-sm sm:text-base"
+                  >
+                    <Search className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <span className="hidden sm:inline">{loading ? 'Searching...' : 'Search'}</span>
+                    <span className="sm:hidden">{loading ? '...' : 'Go'}</span>
+                  </button>
                 </div>
-              )}
-            </form>
 
-            <div className="mt-12 sm:mt-16 pt-6 sm:pt-8 border-t text-center">
-              <p className="text-sm sm:text-base text-slate-600 font-medium mb-2">Your itinerary code was sent via email</p>
-              <p className="text-xs sm:text-sm text-slate-500 px-4">Format: <span className="font-mono bg-slate-100 px-2 sm:px-3 py-1 rounded">IT-YYYY-XXXXXX</span></p>
+                {error && (
+                  <div className="mt-5 p-5 bg-red-500/90 backdrop-blur-sm border-2 border-red-400/50 rounded-xl text-white flex items-start gap-3 shadow-xl">
+                    <div className="w-5 h-5 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <span className="text-white text-xs font-bold">!</span>
+                    </div>
+                    <span className="font-medium">{error}</span>
+                  </div>
+                )}
+              </form>
+
+              <div className="mt-12 sm:mt-16 pt-6 sm:pt-8 border-t border-white/20 text-center">
+                <p className="text-sm sm:text-base text-white/90 font-medium mb-2">Your itinerary code was sent via email</p>
+                <p className="text-xs sm:text-sm text-white/70 px-4">
+                  Format: <span className="font-mono bg-white/10 backdrop-blur-sm px-2 sm:px-3 py-1 rounded border border-white/20">IT-YYYY-XXXXXX</span>
+                </p>
+              </div>
             </div>
           </div>
         ) : (
