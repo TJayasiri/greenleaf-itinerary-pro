@@ -256,7 +256,7 @@ function AddUserModal({ onClose, onAdded }: { onClose: () => void; onAdded: () =
     setLoading(true)
 
     try {
-      const response = await fetch('/api/create-user', {
+      const response = await fetch('/api/send-itinerary/create-user', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
