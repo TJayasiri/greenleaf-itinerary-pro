@@ -1,7 +1,7 @@
 // File: app/layout.tsx
 
 import './globals.css'
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 
 export const metadata: Metadata = {
   title: 'Greenleaf Itinerary Pro',
@@ -11,6 +11,14 @@ export const metadata: Metadata = {
   },
 }
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  themeColor: '#62BBC1',
+}
+
 export default function RootLayout({
   children,
 }: {
@@ -18,7 +26,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className="antialiased">{children}</body>
     </html>
   )
 }

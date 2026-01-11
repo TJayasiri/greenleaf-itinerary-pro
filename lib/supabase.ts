@@ -58,9 +58,21 @@ export interface Document {
 export function generateItineraryCode(): string {
   const year = new Date().getFullYear()
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+
+  // Use cryptographically secure random number generation
+  const randomBytes = new Uint8Array(6)
+  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+    crypto.getRandomValues(randomBytes)
+  } else {
+    // Fallback for environments without crypto (should rarely happen in browser/Node)
+    for (let i = 0; i < 6; i++) {
+      randomBytes[i] = Math.floor(Math.random() * 256)
+    }
+  }
+
   let code = ''
   for (let i = 0; i < 6; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length))
+    code += chars.charAt(randomBytes[i] % chars.length)
   }
   return `IT-${year}-${code}`
 }

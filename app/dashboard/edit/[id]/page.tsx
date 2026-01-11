@@ -592,80 +592,81 @@ function FlightsSection({ flights, onChange }: any) {
           flights.map((flight: any, i: number) => (
             <div key={i} className="p-6 bg-gradient-to-br from-slate-50 to-white border-2 border-slate-200 rounded-xl hover:shadow-md transition group">
               {/* Row 1: Airline & Flight Number */}
-              <div className="grid grid-cols-2 gap-3 mb-3">
-                <input 
-                  type="text" 
-                  placeholder="Airline (e.g., Singapore Airlines)" 
-                  value={flight.airline || ''} 
-                  onChange={(e) => updateFlight(i, 'airline', e.target.value)} 
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                <input
+                  type="text"
+                  placeholder="Airline (e.g., Singapore Airlines)"
+                  value={flight.airline || ''}
+                  onChange={(e) => updateFlight(i, 'airline', e.target.value)}
                   className="px-4 py-3 bg-white border-2 border-slate-200 rounded-lg focus:border-sky-500 focus:outline-none font-medium"
                 />
-                <input 
-                  type="text" 
-                  placeholder="Flight No (e.g., SQ118)" 
-                  value={flight.flight || ''} 
-                  onChange={(e) => updateFlight(i, 'flight', e.target.value)} 
+                <input
+                  type="text"
+                  placeholder="Flight No (e.g., SQ118)"
+                  value={flight.flight || ''}
+                  onChange={(e) => updateFlight(i, 'flight', e.target.value)}
                   className="px-4 py-3 bg-white border-2 border-slate-200 rounded-lg focus:border-sky-500 focus:outline-none"
                 />
               </div>
 
-              {/* Row 2: Route & Times */}
-              <div className="grid grid-cols-5 gap-3 mb-3">
-                <input 
-                  type="date" 
-                  value={flight.date || ''} 
-                  onChange={(e) => updateFlight(i, 'date', e.target.value)} 
-                  className="px-3 py-2 bg-white border-2 border-slate-200 rounded-lg text-sm focus:border-sky-500 focus:outline-none"
+              {/* Row 2: Route & Times - Responsive grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-3">
+                <input
+                  type="date"
+                  value={flight.date || ''}
+                  onChange={(e) => updateFlight(i, 'date', e.target.value)}
+                  className="px-3 py-3 bg-white border-2 border-slate-200 rounded-lg text-base focus:border-sky-500 focus:outline-none col-span-2 sm:col-span-1"
                 />
-                <input 
-                  type="text" 
-                  placeholder="From" 
-                  value={flight.from || ''} 
-                  onChange={(e) => updateFlight(i, 'from', e.target.value)} 
-                  className="px-3 py-2 bg-white border-2 border-slate-200 rounded-lg text-sm focus:border-sky-500 focus:outline-none"
+                <input
+                  type="text"
+                  placeholder="From"
+                  value={flight.from || ''}
+                  onChange={(e) => updateFlight(i, 'from', e.target.value)}
+                  className="px-3 py-3 bg-white border-2 border-slate-200 rounded-lg text-base focus:border-sky-500 focus:outline-none"
                 />
-                <input 
-                  type="text" 
-                  placeholder="To" 
-                  value={flight.to || ''} 
-                  onChange={(e) => updateFlight(i, 'to', e.target.value)} 
-                  className="px-3 py-2 bg-white border-2 border-slate-200 rounded-lg text-sm focus:border-sky-500 focus:outline-none"
+                <input
+                  type="text"
+                  placeholder="To"
+                  value={flight.to || ''}
+                  onChange={(e) => updateFlight(i, 'to', e.target.value)}
+                  className="px-3 py-3 bg-white border-2 border-slate-200 rounded-lg text-base focus:border-sky-500 focus:outline-none"
                 />
-                <input 
-                  type="time" 
-                  value={flight.dep || ''} 
-                  onChange={(e) => updateFlight(i, 'dep', e.target.value)} 
-                  className="px-3 py-2 bg-white border-2 border-slate-200 rounded-lg text-sm focus:border-sky-500 focus:outline-none"
+                <input
+                  type="time"
+                  value={flight.dep || ''}
+                  onChange={(e) => updateFlight(i, 'dep', e.target.value)}
+                  className="px-3 py-3 bg-white border-2 border-slate-200 rounded-lg text-base focus:border-sky-500 focus:outline-none"
                 />
-                <input 
-                  type="time" 
-                  value={flight.arr || ''} 
-                  onChange={(e) => updateFlight(i, 'arr', e.target.value)} 
-                  className="px-3 py-2 bg-white border-2 border-slate-200 rounded-lg text-sm focus:border-sky-500 focus:outline-none"
+                <input
+                  type="time"
+                  value={flight.arr || ''}
+                  onChange={(e) => updateFlight(i, 'arr', e.target.value)}
+                  className="px-3 py-3 bg-white border-2 border-slate-200 rounded-lg text-base focus:border-sky-500 focus:outline-none"
                 />
               </div>
 
               {/* Row 3: PNR & E-ticket */}
-              <div className="grid grid-cols-3 gap-3">
-                <input 
-                  type="text" 
-                  placeholder="PNR (e.g., ABC123)" 
-                  value={flight.pnr || ''} 
-                  onChange={(e) => updateFlight(i, 'pnr', e.target.value)} 
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 items-center">
+                <input
+                  type="text"
+                  placeholder="PNR (e.g., ABC123)"
+                  value={flight.pnr || ''}
+                  onChange={(e) => updateFlight(i, 'pnr', e.target.value)}
                   className="px-4 py-3 bg-white border-2 border-slate-200 rounded-lg focus:border-sky-500 focus:outline-none font-mono"
                 />
-                <input 
-                  type="text" 
-                  placeholder="E-ticket (e.g., 618-1234567890)" 
-                  value={flight.eticket || ''} 
-                  onChange={(e) => updateFlight(i, 'eticket', e.target.value)} 
+                <input
+                  type="text"
+                  placeholder="E-ticket (e.g., 618-1234567890)"
+                  value={flight.eticket || ''}
+                  onChange={(e) => updateFlight(i, 'eticket', e.target.value)}
                   className="px-4 py-3 bg-white border-2 border-slate-200 rounded-lg focus:border-sky-500 focus:outline-none font-mono"
                 />
-                <button 
-                  onClick={() => removeFlight(i)} 
-                  className="text-slate-400 hover:text-red-600 hover:scale-110 transition opacity-0 group-hover:opacity-100"
+                <button
+                  onClick={() => removeFlight(i)}
+                  className="text-slate-400 hover:text-red-600 transition flex items-center gap-2 py-2 sm:opacity-0 group-hover:opacity-100"
                 >
                   <Trash2 className="w-5 h-5" />
+                  <span className="sm:hidden text-sm font-medium">Remove Flight</span>
                 </button>
               </div>
             </div>
@@ -714,16 +715,19 @@ function VisitsSection({ visits, onChange }: any) {
           <div className="text-center py-8 text-slate-500">No visits added yet</div>
         ) : (
           visits.map((visit: any, i: number) => (
-            <div key={i} className="p-6 bg-gradient-to-br from-slate-50 to-white border-2 border-slate-200 rounded-xl hover:shadow-md transition group">
-              <div className="grid grid-cols-3 gap-4 mb-4">
-                <input type="date" value={visit.date} onChange={(e) => updateVisit(i, 'date', e.target.value)} className="px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-sm focus:border-emerald-500 focus:outline-none" />
-                <input type="text" placeholder="Activity" value={visit.activity} onChange={(e) => updateVisit(i, 'activity', e.target.value)} className="px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-sm focus:border-emerald-500 focus:outline-none" />
-                <input type="text" placeholder="Facility" value={visit.facility} onChange={(e) => updateVisit(i, 'facility', e.target.value)} className="px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-sm focus:border-emerald-500 focus:outline-none" />
+            <div key={i} className="p-4 sm:p-6 bg-gradient-to-br from-slate-50 to-white border-2 border-slate-200 rounded-xl hover:shadow-md transition group">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                <input type="date" value={visit.date} onChange={(e) => updateVisit(i, 'date', e.target.value)} className="px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-base focus:border-emerald-500 focus:outline-none" />
+                <input type="text" placeholder="Activity" value={visit.activity} onChange={(e) => updateVisit(i, 'activity', e.target.value)} className="px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-base focus:border-emerald-500 focus:outline-none" />
+                <input type="text" placeholder="Facility" value={visit.facility} onChange={(e) => updateVisit(i, 'facility', e.target.value)} className="px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-base focus:border-emerald-500 focus:outline-none sm:col-span-2 lg:col-span-1" />
               </div>
-              <div className="grid grid-cols-5 gap-4 items-start">
-                <textarea placeholder="Address" value={visit.address} onChange={(e) => updateVisit(i, 'address', e.target.value)} className="col-span-3 px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-sm focus:border-emerald-500 focus:outline-none" rows={2} />
-                <input type="text" placeholder="Transport" value={visit.transport} onChange={(e) => updateVisit(i, 'transport', e.target.value)} className="px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-sm focus:border-emerald-500 focus:outline-none" />
-                <button onClick={() => removeVisit(i)} className="text-slate-400 hover:text-red-600 hover:scale-110 transition self-start mt-2 opacity-0 group-hover:opacity-100"><Trash2 className="w-5 h-5" /></button>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-start">
+                <textarea placeholder="Address" value={visit.address} onChange={(e) => updateVisit(i, 'address', e.target.value)} className="px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-base focus:border-emerald-500 focus:outline-none sm:col-span-2 lg:col-span-1" rows={2} />
+                <input type="text" placeholder="Transport" value={visit.transport} onChange={(e) => updateVisit(i, 'transport', e.target.value)} className="px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-base focus:border-emerald-500 focus:outline-none" />
+                <button onClick={() => removeVisit(i)} className="text-slate-400 hover:text-red-600 transition flex items-center gap-2 py-2 sm:opacity-0 group-hover:opacity-100">
+                  <Trash2 className="w-5 h-5" />
+                  <span className="sm:hidden text-sm font-medium">Remove Visit</span>
+                </button>
               </div>
             </div>
           ))
@@ -762,22 +766,22 @@ function AccommodationSection({ accommodation, onChange }: any) {
         </div>
       </div>
 
-      <div className="p-8 space-y-4">
+      <div className="p-4 sm:p-8 space-y-4">
         {accommodation.length === 0 ? <div className="text-center py-8 text-slate-500">No accommodation added yet</div> : accommodation.map((hotel: any, i: number) => (
-          <div key={i} className="p-6 bg-gradient-to-br from-slate-50 to-white border-2 border-slate-200 rounded-xl hover:shadow-md transition group">
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <input type="text" placeholder="Hotel Name" value={hotel.hotel_name} onChange={(e) => updateAccommodation(i, 'hotel_name', e.target.value)} className="px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-sm focus:border-amber-500 focus:outline-none" />
-              <input type="text" placeholder="Confirmation Number" value={hotel.confirmation} onChange={(e) => updateAccommodation(i, 'confirmation', e.target.value)} className="px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-sm focus:border-amber-500 focus:outline-none" />
+          <div key={i} className="p-4 sm:p-6 bg-gradient-to-br from-slate-50 to-white border-2 border-slate-200 rounded-xl hover:shadow-md transition group">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+              <input type="text" placeholder="Hotel Name" value={hotel.hotel_name} onChange={(e) => updateAccommodation(i, 'hotel_name', e.target.value)} className="px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-base focus:border-amber-500 focus:outline-none" />
+              <input type="text" placeholder="Confirmation Number" value={hotel.confirmation} onChange={(e) => updateAccommodation(i, 'confirmation', e.target.value)} className="px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-base focus:border-amber-500 focus:outline-none" />
             </div>
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div><label className="block text-xs font-semibold text-slate-600 mb-2">Check-in</label><input type="date" value={hotel.checkin} onChange={(e) => updateAccommodation(i, 'checkin', e.target.value)} className="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-sm focus:border-amber-500 focus:outline-none" /></div>
-              <div><label className="block text-xs font-semibold text-slate-600 mb-2">Check-out</label><input type="date" value={hotel.checkout} onChange={(e) => updateAccommodation(i, 'checkout', e.target.value)} className="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-sm focus:border-amber-500 focus:outline-none" /></div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+              <div><label className="block text-xs font-semibold text-slate-600 mb-2">Check-in</label><input type="date" value={hotel.checkin} onChange={(e) => updateAccommodation(i, 'checkin', e.target.value)} className="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-base focus:border-amber-500 focus:outline-none" /></div>
+              <div><label className="block text-xs font-semibold text-slate-600 mb-2">Check-out</label><input type="date" value={hotel.checkout} onChange={(e) => updateAccommodation(i, 'checkout', e.target.value)} className="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-base focus:border-amber-500 focus:outline-none" /></div>
             </div>
-            <div className="grid grid-cols-3 gap-4">
-              <input type="text" placeholder="Address" value={hotel.address} onChange={(e) => updateAccommodation(i, 'address', e.target.value)} className="col-span-2 px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-sm focus:border-amber-500 focus:outline-none" />
-              <input type="tel" placeholder="Phone" value={hotel.phone} onChange={(e) => updateAccommodation(i, 'phone', e.target.value)} className="px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-sm focus:border-amber-500 focus:outline-none" />
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <input type="text" placeholder="Address" value={hotel.address} onChange={(e) => updateAccommodation(i, 'address', e.target.value)} className="sm:col-span-2 px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-base focus:border-amber-500 focus:outline-none" />
+              <input type="tel" placeholder="Phone" value={hotel.phone} onChange={(e) => updateAccommodation(i, 'phone', e.target.value)} className="px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-base focus:border-amber-500 focus:outline-none" />
             </div>
-            <button onClick={() => removeAccommodation(i)} className="mt-4 text-slate-400 hover:text-red-600 hover:scale-110 transition opacity-0 group-hover:opacity-100 flex items-center gap-2"><Trash2 className="w-4 h-4" /><span className="text-sm font-medium">Remove</span></button>
+            <button onClick={() => removeAccommodation(i)} className="mt-4 text-slate-400 hover:text-red-600 transition flex items-center gap-2 sm:opacity-0 group-hover:opacity-100"><Trash2 className="w-4 h-4" /><span className="text-sm font-medium">Remove Hotel</span></button>
           </div>
         ))}
       </div>
@@ -812,22 +816,28 @@ function GroundTransportSection({ transport, onChange }: any) {
         </div>
       </div>
 
-      <div className="p-8 space-y-4">
+      <div className="p-4 sm:p-8 space-y-4">
         {transport.length === 0 ? <div className="text-center py-8 text-slate-500">No transport added yet</div> : transport.map((item: any, i: number) => (
-          <div key={i} className="p-6 bg-gradient-to-br from-slate-50 to-white border-2 border-slate-200 rounded-xl hover:shadow-md transition group">
-            <div className="grid grid-cols-3 gap-4 mb-4">
-              <select value={item.type} onChange={(e) => updateTransport(i, 'type', e.target.value)} className="px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-sm focus:border-violet-500 focus:outline-none">
+          <div key={i} className="p-4 sm:p-6 bg-gradient-to-br from-slate-50 to-white border-2 border-slate-200 rounded-xl hover:shadow-md transition group">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+              <select value={item.type} onChange={(e) => updateTransport(i, 'type', e.target.value)} className="px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-base focus:border-violet-500 focus:outline-none">
                 <option value="">Select Type</option><option value="Taxi">Taxi</option><option value="Rental Car">Rental Car</option><option value="Train">Train</option><option value="Bus">Bus</option><option value="Private Transfer">Private Transfer</option>
               </select>
-              <input type="text" placeholder="Company Name" value={item.company} onChange={(e) => updateTransport(i, 'company', e.target.value)} className="px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-sm focus:border-violet-500 focus:outline-none" />
-              <input type="text" placeholder="Confirmation #" value={item.confirmation} onChange={(e) => updateTransport(i, 'confirmation', e.target.value)} className="px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-sm focus:border-violet-500 focus:outline-none" />
+              <input type="text" placeholder="Company Name" value={item.company} onChange={(e) => updateTransport(i, 'company', e.target.value)} className="px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-base focus:border-violet-500 focus:outline-none" />
+              <input type="text" placeholder="Confirmation #" value={item.confirmation} onChange={(e) => updateTransport(i, 'confirmation', e.target.value)} className="px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-base focus:border-violet-500 focus:outline-none sm:col-span-2 lg:col-span-1" />
             </div>
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <input type="time" value={item.pickup_time} onChange={(e) => updateTransport(i, 'pickup_time', e.target.value)} className="px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-sm focus:border-violet-500 focus:outline-none" />
-              <input type="text" placeholder="Pickup Location" value={item.pickup_location} onChange={(e) => updateTransport(i, 'pickup_location', e.target.value)} className="px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-sm focus:border-violet-500 focus:outline-none" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-2">Pickup Time</label>
+                <input type="time" value={item.pickup_time} onChange={(e) => updateTransport(i, 'pickup_time', e.target.value)} className="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-base focus:border-violet-500 focus:outline-none" />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-2">Pickup Location</label>
+                <input type="text" placeholder="Pickup Location" value={item.pickup_location} onChange={(e) => updateTransport(i, 'pickup_location', e.target.value)} className="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-base focus:border-violet-500 focus:outline-none" />
+              </div>
             </div>
-            <textarea placeholder="Additional Notes" value={item.notes} onChange={(e) => updateTransport(i, 'notes', e.target.value)} className="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-sm focus:border-violet-500 focus:outline-none" rows={2} />
-            <button onClick={() => removeTransport(i)} className="mt-4 text-slate-400 hover:text-red-600 hover:scale-110 transition opacity-0 group-hover:opacity-100 flex items-center gap-2"><Trash2 className="w-4 h-4" /><span className="text-sm font-medium">Remove</span></button>
+            <textarea placeholder="Additional Notes" value={item.notes} onChange={(e) => updateTransport(i, 'notes', e.target.value)} className="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-base focus:border-violet-500 focus:outline-none" rows={2} />
+            <button onClick={() => removeTransport(i)} className="mt-4 text-slate-400 hover:text-red-600 transition flex items-center gap-2 sm:opacity-0 group-hover:opacity-100"><Trash2 className="w-4 h-4" /><span className="text-sm font-medium">Remove Transport</span></button>
           </div>
         ))}
       </div>

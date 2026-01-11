@@ -95,68 +95,87 @@ export default function AdminPage() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 py-8">
         {/* Stats */}
-        <div className="grid md:grid-cols-3 gap-4 mb-8">
-          <div className="bg-white rounded-xl shadow-sm border p-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+          <div className="bg-white rounded-xl shadow-sm border p-4 sm:p-6">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Users className="w-6 h-6 text-blue-600" />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                <Users className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
               </div>
               <div>
-                <div className="text-2xl font-bold">{stats.users}</div>
-                <div className="text-sm text-slate-600">Total Users</div>
+                <div className="text-xl sm:text-2xl font-bold">{stats.users}</div>
+                <div className="text-xs sm:text-sm text-slate-600">Total Users</div>
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-xl shadow-sm border p-6">
+          <div className="bg-white rounded-xl shadow-sm border p-4 sm:p-6">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <FileText className="w-6 h-6 text-green-600" />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
               </div>
               <div>
-                <div className="text-2xl font-bold">{stats.itineraries}</div>
-                <div className="text-sm text-slate-600">Total Itineraries</div>
+                <div className="text-xl sm:text-2xl font-bold">{stats.itineraries}</div>
+                <div className="text-xs sm:text-sm text-slate-600">Total Itineraries</div>
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-xl shadow-sm border p-6">
+          <div className="bg-white rounded-xl shadow-sm border p-4 sm:p-6 sm:col-span-2 md:col-span-1">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                <FileText className="w-6 h-6 text-purple-600" />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
               </div>
               <div>
-                <div className="text-2xl font-bold">{stats.thisMonth}</div>
-                <div className="text-sm text-slate-600">This Month</div>
+                <div className="text-xl sm:text-2xl font-bold">{stats.thisMonth}</div>
+                <div className="text-xs sm:text-sm text-slate-600">This Month</div>
               </div>
             </div>
           </div>
         </div>
 
         {/* Quick Actions */}
-        <div className="flex gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6">
           <button
             onClick={() => setShowCreateItin(true)}
-            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#62BBC1] to-[#51aab0] text-white rounded-lg hover:shadow-lg transition font-semibold"
+            className="flex items-center justify-center gap-2 px-4 sm:px-6 py-3 bg-gradient-to-r from-[#62BBC1] to-[#51aab0] text-white rounded-lg hover:shadow-lg transition font-semibold text-sm sm:text-base"
           >
             <Plus className="w-5 h-5" />
-            Create New Itinerary
+            <span>Create New Itinerary</span>
           </button>
           <button
             onClick={() => setShowAddUser(true)}
-            className="flex items-center gap-2 px-6 py-3 bg-white border-2 border-slate-200 text-slate-700 rounded-lg hover:border-[#62BBC1] transition font-semibold"
+            className="flex items-center justify-center gap-2 px-4 sm:px-6 py-3 bg-white border-2 border-slate-200 text-slate-700 rounded-lg hover:border-[#62BBC1] transition font-semibold text-sm sm:text-base"
           >
             <UserPlus className="w-5 h-5" />
-            Add User
+            <span>Add User</span>
           </button>
         </div>
 
         {/* Users Section */}
-        <section className="bg-white rounded-xl shadow-sm border p-6 mb-6">
+        <section className="bg-white rounded-xl shadow-sm border p-4 sm:p-6 mb-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-bold">Users</h2>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full">
+          {/* Mobile Cards View */}
+          <div className="sm:hidden space-y-3">
+            {users.map((user) => (
+              <div key={user.id} className="p-4 bg-slate-50 rounded-lg border">
+                <div className="flex justify-between items-start mb-2">
+                  <div className="font-medium text-slate-900">{user.name}</div>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${user.role === 'admin' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
+                    {user.role}
+                  </span>
+                </div>
+                <div className="text-sm text-slate-600 break-all">{user.email}</div>
+                <div className="text-xs text-slate-500 mt-2">
+                  Joined {new Date(user.created_at).toLocaleDateString()}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop Table View */}
+          <div className="hidden sm:block overflow-x-auto">
+            <table className="w-full min-w-[500px]">
               <thead className="bg-slate-50 border-b">
                 <tr>
                   <th className="px-4 py-3 text-left text-sm font-medium text-slate-700">Name</th>
@@ -169,7 +188,7 @@ export default function AdminPage() {
                 {users.map((user) => (
                   <tr key={user.id} className="hover:bg-slate-50">
                     <td className="px-4 py-3">{user.name}</td>
-                    <td className="px-4 py-3">{user.email}</td>
+                    <td className="px-4 py-3 break-all">{user.email}</td>
                     <td className="px-4 py-3">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${user.role === 'admin' ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'
                         }`}>
@@ -187,10 +206,38 @@ export default function AdminPage() {
         </section>
 
         {/* Recent Itineraries */}
-        <section className="bg-white rounded-xl shadow-sm border p-6">
+        <section className="bg-white rounded-xl shadow-sm border p-4 sm:p-6">
           <h2 className="text-lg font-bold mb-4">Recent Itineraries</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full">
+
+          {/* Mobile Cards View */}
+          <div className="sm:hidden space-y-3">
+            {itineraries.slice(0, 10).map((itin) => (
+              <div
+                key={itin.id}
+                onClick={() => router.push(`/dashboard/edit/${itin.id}`)}
+                className="p-4 bg-slate-50 rounded-lg border cursor-pointer hover:bg-slate-100 transition"
+              >
+                <div className="flex justify-between items-start mb-2">
+                  <div className="font-mono text-sm text-[#62BBC1] font-semibold">{itin.code}</div>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${itin.status === 'draft' ? 'bg-slate-100 text-slate-700' :
+                      itin.status === 'sent' ? 'bg-blue-100 text-blue-700' :
+                        'bg-green-100 text-green-700'
+                    }`}>
+                    {itin.status}
+                  </span>
+                </div>
+                <div className="font-medium text-slate-900 mb-1">{itin.doc_title || 'Untitled'}</div>
+                <div className="text-sm text-slate-600">{itin.participants?.split(';')[0] || '-'}</div>
+                <div className="text-xs text-slate-500 mt-2">
+                  {new Date(itin.created_at).toLocaleDateString()}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop Table View */}
+          <div className="hidden sm:block overflow-x-auto">
+            <table className="w-full min-w-[600px]">
               <thead className="bg-slate-50 border-b">
                 <tr>
                   <th className="px-4 py-3 text-left text-sm font-medium text-slate-700">Code</th>
@@ -256,7 +303,7 @@ function AddUserModal({ onClose, onAdded }: { onClose: () => void; onAdded: () =
     setLoading(true)
 
     try {
-      const response = await fetch('/api/create-user', {
+      const response = await fetch('/api/send-itinerary/create-user', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
