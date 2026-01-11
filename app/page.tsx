@@ -38,7 +38,7 @@ export default function HomePage() {
     setItinerary(null)
     try {
       const { data, error: err } = await supabase
-        .from('public_itineraries')
+        .from('itineraries')
         .select('*')
         .eq('code', searchCode.toUpperCase().trim())
         .single()
